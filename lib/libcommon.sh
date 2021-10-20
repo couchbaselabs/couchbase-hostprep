@@ -59,7 +59,7 @@ function set_linux_type {
 function install_pkg {
   case $PKGMGR in
   yum)
-    yum install -qy $@
+    yum install -q -y $@
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -207,7 +207,7 @@ chkconfig --add disable-thp
 
 which tuned-adm >/dev/null 2>&1
 if [ $? -eq 0 ]; then
-mkdir /etc/tuned/no-thp
+[ ! -d /etc/tuned/no-thp ] && mkdir /etc/tuned/no-thp
 
 cat <<EOF > /etc/tuned/no-thp/tuned.conf
 [main]
