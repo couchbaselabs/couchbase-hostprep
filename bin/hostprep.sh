@@ -5,6 +5,8 @@ PKGDIR=$(dirname $SCRIPTDIR)
 source $PKGDIR/lib/libcommon.sh
 TYPE="generic"
 VERSION="7.0.2-6703"
+PKGMGR="yum"
+SVGMGR="systemctl"
 PRINT_USAGE="Usage: $0 -t [ -v | -n | -d ]
              -t Host type
              -v Couchbase version

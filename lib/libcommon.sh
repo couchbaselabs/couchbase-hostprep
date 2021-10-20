@@ -43,12 +43,71 @@ function log_output {
     done
 }
 
+function set_linux_type {
+  source /etc/os-release
+  export LINUXTYPE=$ID
+  case $ID in
+  centos)
+    PKGMGR="yum"
+    SVGMGR="systemctl"
+    ;;
+  *)
+    err_exit "Unknown Linux distribution $ID"
+    ;;
+  esac
+}
+
+function install_pkg {
+  case $PKGMGR in
+  yum)
+    yum install -y $@
+    ;;
+  *)
+    err_exit "Unknown package manager $PKGMGR"
+    ;;
+  esac
+}
+
+function service_control {
+  case $SVGMGR in
+  systemctl)
+    systemctl $@
+    ;;
+  *)
+    err_exit "Unknown service manager $SVGMGR"
+    ;;
+  esac
+}
+
+function nm_check {
+  case $LINUXTYPE in
+  centos)
+    local PKGNAME="NetworkManager"
+    local SVCNAME=$PKGNAME
+    ;;
+  *)
+    err_exit "Unknown linux type $PKGMGR"
+    ;;
+  esac
+
+  which nmcli >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    install_pkg $PKGNAME
+    service_control enable $SVCNAME
+    service_control start $SVCNAME
+  fi
+}
+
 function prep_generic {
   local DATE=$(date +%m%d%y_%H%M)
   echo "Starting general prep steps on $DATE."
+  set_linux_type
+  echo "System type: $LINUXTYPE"
 }
 
 function cb_install {
   local DATE=$(date +%m%d%y_%H%M)
   echo "Starting Couchbase server install steps on $DATE."
+  set_linux_type
+  echo "System type: $LINUXTYPE"
 }
