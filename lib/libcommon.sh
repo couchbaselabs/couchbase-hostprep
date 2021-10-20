@@ -32,11 +32,11 @@ function log_output {
     [ -z "$NOLOG" ] && NOLOG=0
     DATE=$(date '+%m-%d-%y_%H:%M:%S')
     HOSTNAME=$(uname -n)
-    [ -z "$LOGFILE" ] && LOGFILE=/tmp/$(basename $0).log
+    [ -z "$LOGFILE" ] && LOGFILE=/var/log/$(basename $0).log
     while read line; do
         [ -z "$line" ] && continue
         if [ "$NOLOG" -eq 0 -a -n "$LOGFILE" ]; then
-           echo "$DATE $HOSTNAME: $line" >> $LOGFILE
+           echo "$DATE $HOSTNAME: $line" | tee -a $LOGFILE
         else
            echo "$DATE $HOSTNAME: $line"
         fi
@@ -99,15 +99,14 @@ function nm_check {
 }
 
 function prep_generic {
-  local DATE=$(date +%m%d%y_%H%M)
-  echo "Starting general prep steps on $DATE."
+  log_output "Starting general host prep."
   set_linux_type
-  echo "System type: $LINUXTYPE"
+  log_output "System type: $LINUXTYPE"
+  nm_check
 }
 
 function cb_install {
-  local DATE=$(date +%m%d%y_%H%M)
-  echo "Starting Couchbase server install steps on $DATE."
+  log_output "Starting Couchbase server install."
   set_linux_type
-  echo "System type: $LINUXTYPE"
+  log_output "System type: $LINUXTYPE"
 }
