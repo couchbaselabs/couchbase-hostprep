@@ -46,7 +46,7 @@ case $TYPE in
     prep_generic
     cb_install
     ;;
-  \?)
+  *)
     err_exit "Unknown node type $TYPE"
     ;;
 esac
