@@ -56,6 +56,7 @@ fi
 case $TYPE in
   generic)
     prep_generic
+    enable_docker
     ;;
   cbnode)
     prep_generic

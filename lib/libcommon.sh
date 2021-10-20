@@ -67,6 +67,17 @@ function install_pkg {
   esac
 }
 
+function install_pkg_file {
+  case $PKGMGR in
+  yum)
+    rpm -i $@
+    ;;
+  *)
+    err_exit "Unknown package manager $PKGMGR"
+    ;;
+  esac
+}
+
 function service_control {
   case $SVGMGR in
   systemctl)
@@ -85,7 +96,7 @@ function nm_check {
     local SVCNAME=$PKGNAME
     ;;
   *)
-    err_exit "Unknown linux type $PKGMGR"
+    err_exit "Unknown linux type $LINUXTYPE"
     ;;
   esac
 
@@ -150,6 +161,99 @@ function add_admin_user {
   fi
 }
 
+function disable_thp {
+echo "Disabling transparent huge pages."
+
+cat <<EOF > /etc/init.d/disable-thp
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          disable-thp
+# Required-Start:    $local_fs
+# Required-Stop:
+# X-Start-Before:    couchbase-server
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Disable THP
+# Description:       disables Transparent Huge Pages (THP) on boot
+### END INIT INFO
+
+case $1 in
+start)
+  if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+    echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
+    echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
+  elif [ -d /sys/kernel/mm/redhat_transparent_hugepage ]; then
+    echo 'never' > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+    echo 'never' > /sys/kernel/mm/redhat_transparent_hugepage/defrag
+  else
+    return 0
+  fi
+;;
+esac
+EOF
+
+chmod 755 /etc/init.d/disable-thp
+chkconfig --add disable-thp
+
+which tuned-adm >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+mkdir /etc/tuned/no-thp
+
+cat <<EOF > /etc/tuned/no-thp/tuned.conf
+[main]
+include=virtual-guest
+
+[vm]
+transparent_hugepages=never
+EOF
+
+tuned-adm profile no-thp
+fi
+}
+
+function config_swappiness {
+echo "Configuring swappiness."
+echo "vm.swappiness = 0" >> /etc/sysctl.conf
+echo 0 > /proc/sys/vm/swappiness
+}
+
+function install_sw_generic {
+  case $LINUXTYPE in
+  centos)
+    yum install -y epel-release
+    yum install -y bzip2 jq git python-pip wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    yum install -y docker-ce docker-ce-cli containerd.io
+    usermod -a -G docker $ADMINUSER
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
+
+  mkdir /home/${ADMINUSER}/bin
+  git clone https://github.com/mminichino/perf-lab-bin /home/${ADMINUSER}/bin
+  chown -R ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/bin
+}
+
+function install_sw_couchbase {
+  case $LINUXTYPE in
+  centos)
+    curl -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
+    install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
+    install_pkg couchbase-server-${VERSION}
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
+
+cat <<EOF > /etc/security/limits.d/91-couchbase.conf
+couchbase soft nproc 4096
+couchbase hard nproc 16384
+EOF
+}
+
 function prep_generic {
   exec 2>&1
   echo "Starting general host prep." | log_output
@@ -159,6 +263,24 @@ function prep_generic {
   host_dns | log_output
   host_name | log_output
   add_admin_user | log_output
+  disable_thp | log_output
+  config_swappiness | log_output
+  install_sw_generic | log_output
+}
+
+function enable_docker {
+  case $LINUXTYPE in
+  centos)
+    local PKGNAME="docker"
+    local SVCNAME=$PKGNAME
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
+
+  service_control start $SVCNAME
+  service_control enable $SVCNAME
 }
 
 function cb_install {
@@ -166,4 +288,5 @@ function cb_install {
   echo "Starting Couchbase server install." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
+  install_sw_couchbase | log_output
 }
