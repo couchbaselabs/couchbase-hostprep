@@ -42,3 +42,13 @@ function log_output {
         fi
     done
 }
+
+function prep_generic {
+  local DATE=$(date +%m%d%y_%H%M)
+  echo "Starting general prep steps on $DATE."
+}
+
+function cb_install {
+  local DATE=$(date +%m%d%y_%H%M)
+  echo "Starting Couchbase server install steps on $DATE."
+}
