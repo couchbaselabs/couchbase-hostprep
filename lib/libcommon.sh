@@ -31,14 +31,13 @@ function info_msg {
 function log_output {
     [ -z "$NOLOG" ] && NOLOG=0
     DATE=$(date '+%m-%d-%y_%H:%M:%S')
-    HOSTNAME=$(uname -n)
     [ -z "$LOGFILE" ] && LOGFILE=/var/log/$(basename $0).log
     while read line; do
         [ -z "$line" ] && continue
         if [ "$NOLOG" -eq 0 -a -n "$LOGFILE" ]; then
-           echo "$DATE $HOSTNAME: $line" | tee -a $LOGFILE
+           echo "$DATE: $line" | tee -a $LOGFILE
         else
-           echo "$DATE $HOSTNAME: $line"
+           echo "$DATE: $line"
         fi
     done
 }
@@ -60,7 +59,7 @@ function set_linux_type {
 function install_pkg {
   case $PKGMGR in
   yum)
-    yum install -y $@
+    yum install -y $@ 2>&1 | log_output
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -71,7 +70,7 @@ function install_pkg {
 function service_control {
   case $SVGMGR in
   systemctl)
-    systemctl $@
+    systemctl $@ 2>&1 | log_output
     ;;
   *)
     err_exit "Unknown service manager $SVGMGR"
@@ -99,14 +98,14 @@ function nm_check {
 }
 
 function prep_generic {
-  log_output "Starting general host prep."
+  echo "Starting general host prep." | log_output
   set_linux_type
-  log_output "System type: $LINUXTYPE"
+  echo "System type: $LINUXTYPE" | log_output
   nm_check
 }
 
 function cb_install {
-  log_output "Starting Couchbase server install."
+  echo "Starting Couchbase server install." | log_output
   set_linux_type
-  log_output "System type: $LINUXTYPE"
+  echo "System type: $LINUXTYPE" | log_output
 }
