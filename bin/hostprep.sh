@@ -4,7 +4,7 @@ SCRIPTDIR=$(cd $(dirname $0) && pwd)
 PKGDIR=$(dirname $SCRIPTDIR)
 source $PKGDIR/lib/libcommon.sh
 TYPE="generic"
-VERSION="7.0.2-6703"
+CB_VERSION="7.0.2-6703"
 PKGMGR="yum"
 SVGMGR="systemctl"
 ADMINUSER="admin"
@@ -24,7 +24,7 @@ do
       TYPE=$OPTARG
       ;;
     v)
-      VERSION=$OPTARG
+      CB_VERSION=$OPTARG
       ;;
     n)
       NAMESERVER=$OPTARG
