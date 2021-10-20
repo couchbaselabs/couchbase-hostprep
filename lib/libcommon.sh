@@ -59,7 +59,7 @@ function set_linux_type {
 function install_pkg {
   case $PKGMGR in
   yum)
-    yum install -y $@ 2>&1 | log_output
+    yum install -y $@
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -70,7 +70,7 @@ function install_pkg {
 function service_control {
   case $SVGMGR in
   systemctl)
-    systemctl $@ 2>&1 | log_output
+    systemctl $@
     ;;
   *)
     err_exit "Unknown service manager $SVGMGR"
@@ -97,14 +97,48 @@ function nm_check {
   fi
 }
 
+function host_dns {
+  if [ -z "$NAMESERVER" -o -z "$DOMAIN" ]; then
+    echo "DNS parameters not provided, skipping DNS config."
+    return
+  fi
+  local ifName=$(nmcli -t -f NAME c show --active)
+  nmcli c m "$ifName" ipv4.ignore-auto-dns yes
+  nmcli c m "$ifName" ipv4.dns $NAMESERVER
+  nmcli c m "$ifName" ipv4.dns-search $DOMAIN
+  nmcli connection up "$ifName"
+
+  echo "search $DOMAIN" > /etc/resolv.conf
+  for SERVER_ADDRESS in $(echo $NAMESERVER | tr ',' '\n'); do
+    echo "nameserver $SERVER_ADDRESS" >> /etc/resolv.conf
+  done
+}
+
+function host_name {
+  local ifName=$(nmcli -t -f NAME c show --active)
+  if [ -n "$HOSTNAME" ]; then
+    HOSTNAME=$(echo $HOSTNAME | awk -F. '{print $1}')
+  else
+    HOSTNAME="linuxhost"
+  fi
+  hostnamectl set-hostname $HOSTNAME
+  IP_ADDRESS=$(nmcli c s "$ifName" | grep "IP4.ADDRESS" | awk '{print $2}' | sed -e 's/\/.*$//')
+
+  echo "$IP_ADDRESS $HOSTNAME" >> /etc/hosts
+}
+
 function prep_generic {
+  exec 2>&1
   echo "Starting general host prep." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
-  nm_check
+  nm_check | log_output
+  host_dns | log_output
+  host_name | log_output
 }
 
 function cb_install {
+  exec 2>&1
   echo "Starting Couchbase server install." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output

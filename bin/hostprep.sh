@@ -7,13 +7,14 @@ TYPE="generic"
 VERSION="7.0.2-6703"
 PKGMGR="yum"
 SVGMGR="systemctl"
-PRINT_USAGE="Usage: $0 -t [ -v | -n | -d ]
+PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h ]
              -t Host type
              -v Couchbase version
              -n DNS server
-             -d DNS domain"
+             -d DNS domain
+             -h Hostname"
 
-while getopts "t:v:n:d:" opt
+while getopts "t:v:n:d:h:" opt
 do
   case $opt in
     t)
@@ -27,6 +28,9 @@ do
       ;;
     d)
       DOMAIN=$OPTARG
+      ;;
+    h)
+      HOSTNAME=$OPTARG
       ;;
     \?)
       print_usage
