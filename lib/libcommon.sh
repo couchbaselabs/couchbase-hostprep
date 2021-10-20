@@ -253,7 +253,7 @@ function install_sw_generic {
 function install_sw_couchbase {
   case $LINUXTYPE in
   centos)
-    curl -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
+    curl -s -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
     install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
     install_pkg couchbase-server-${VERSION}
     ;;
