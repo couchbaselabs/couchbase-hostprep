@@ -138,14 +138,14 @@ function add_admin_user {
   useradd -u $MYUID -g $ADMINUSER $ADMINUSER
   usermod -a -G wheel $ADMINUSER
   sed -i -e 's/^# %wheel/%wheel/' /etc/sudoers
-  mkdir ~${ADMINUSER}/.ssh
-  chown ${ADMINUSER}:${ADMINUSER} ~${ADMINUSER}/.ssh
-  chmod 700 ~${ADMINUSER}/.ssh
+  mkdir /home/${ADMINUSER}/.ssh
+  chown ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/.ssh
+  chmod 700 /home/${ADMINUSER}/.ssh
   if [ -n "$COPYUSER" ]; then
-    if [ -f ~${COPYUSER}/.ssh/authorized_keys ]; then
-      cp ~${COPYUSER}/.ssh/authorized_keys ~${ADMINUSER}/.ssh/authorized_keys
-      chmod 600 ~${ADMINUSER}/.ssh/authorized_keys
-      chown ${ADMINUSER}:${ADMINUSER} ~${ADMINUSER}/.ssh/authorized_keys
+    if [ -f /home/${COPYUSER}/.ssh/authorized_keys ]; then
+      cp /home/${COPYUSER}/.ssh/authorized_keys /home/${ADMINUSER}/.ssh/authorized_keys
+      chmod 600 /home/${ADMINUSER}/.ssh/authorized_keys
+      chown ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
     fi
   fi
 }
