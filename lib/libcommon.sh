@@ -59,7 +59,7 @@ function set_linux_type {
 function install_pkg {
   case $PKGMGR in
   yum)
-    yum install -y $@
+    yum install -qy $@
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -145,13 +145,23 @@ function add_admin_user {
   local MYUID=$(cat /etc/passwd | grep -v nobody | cut -d: -f3 | sort -n | tail -1)
   MYGID=$((MYGID + 1))
   MYUID=$((MYUID + 1))
-  groupadd -g $MYGID $ADMINUSER
-  useradd -u $MYUID -g $ADMINUSER $ADMINUSER
+
+  grep ^${ADMINUSER} /etc/group >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    groupadd -g $MYGID $ADMINUSER
+  fi
+
+  grep ^${ADMINUSER} /etc/passwd >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    useradd -u $MYUID -g $ADMINUSER $ADMINUSER
+  fi
+
   usermod -a -G wheel $ADMINUSER
   sed -i -e 's/^# %wheel/%wheel/' /etc/sudoers
-  mkdir /home/${ADMINUSER}/.ssh
+  [ ! -d /home/${ADMINUSER}/.ssh ] && mkdir /home/${ADMINUSER}/.ssh
   chown ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/.ssh
   chmod 700 /home/${ADMINUSER}/.ssh
+
   if [ -n "$COPYUSER" ]; then
     if [ -f /home/${COPYUSER}/.ssh/authorized_keys ]; then
       cp /home/${COPYUSER}/.ssh/authorized_keys /home/${ADMINUSER}/.ssh/authorized_keys
@@ -220,10 +230,10 @@ echo 0 > /proc/sys/vm/swappiness
 function install_sw_generic {
   case $LINUXTYPE in
   centos)
-    yum install -y epel-release
-    yum install -y bzip2 jq git python-pip wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
+    install_pkg epel-release
+    install_pkg bzip2 jq git python-pip wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum install -y docker-ce docker-ce-cli containerd.io
+    install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
     ;;
   *)
@@ -231,8 +241,12 @@ function install_sw_generic {
     ;;
   esac
 
+  if [ -d /home/${ADMINUSER}/bin ]; then
+    cp -pr /home/${ADMINUSER}/bin /home/${ADMINUSER}/bin.backup
+    rm -rf /home/${ADMINUSER}/bin
+  fi
   mkdir /home/${ADMINUSER}/bin
-  git clone https://github.com/mminichino/perf-lab-bin /home/${ADMINUSER}/bin
+  git clone -q https://github.com/mminichino/perf-lab-bin /home/${ADMINUSER}/bin
   chown -R ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/bin
 }
 
