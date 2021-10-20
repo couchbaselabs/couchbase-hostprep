@@ -102,6 +102,7 @@ function host_dns {
     echo "DNS parameters not provided, skipping DNS config."
     return
   fi
+  echo "Configuring DNS settings."
   local ifName=$(nmcli -t -f NAME c show --active)
   nmcli c m "$ifName" ipv4.ignore-auto-dns yes
   nmcli c m "$ifName" ipv4.dns $NAMESERVER
@@ -115,6 +116,7 @@ function host_dns {
 }
 
 function host_name {
+  echo "Configuring hostname."
   local ifName=$(nmcli -t -f NAME c show --active)
   if [ -n "$HOSTNAME" ]; then
     HOSTNAME=$(echo $HOSTNAME | awk -F. '{print $1}')
@@ -127,6 +129,27 @@ function host_name {
   echo "$IP_ADDRESS $HOSTNAME" >> /etc/hosts
 }
 
+function add_admin_user {
+  local MYGID=$(cat /etc/group | grep -v nobody | cut -d: -f3 | sort -n | tail -1)
+  local MYUID=$(cat /etc/passwd | grep -v nobody | cut -d: -f3 | sort -n | tail -1)
+  MYGID=$((MYGID + 1))
+  MYUID=$((MYUID + 1))
+  groupadd -g $MYGID $ADMINUSER
+  useradd -u $MYUID -g $ADMINUSER $ADMINUSER
+  usermod -a -G wheel $ADMINUSER
+  sed -i -e 's/^# %wheel/%wheel/' /etc/sudoers
+  mkdir ~${ADMINUSER}/.ssh
+  chown ${ADMINUSER}:${ADMINUSER} ~${ADMINUSER}/.ssh
+  chmod 700 ~${ADMINUSER}/.ssh
+  if [ -n "$COPYUSER" ]; then
+    if [ -f ~${COPYUSER}/.ssh/authorized_keys ]; then
+      cp ~${COPYUSER}/.ssh/authorized_keys ~${ADMINUSER}/.ssh/authorized_keys
+      chmod 600 ~${ADMINUSER}/.ssh/authorized_keys
+      chown ${ADMINUSER}:${ADMINUSER} ~${ADMINUSER}/.ssh/authorized_keys
+    fi
+  fi
+}
+
 function prep_generic {
   exec 2>&1
   echo "Starting general host prep." | log_output
@@ -135,6 +158,7 @@ function prep_generic {
   nm_check | log_output
   host_dns | log_output
   host_name | log_output
+  add_admin_user | log_output
 }
 
 function cb_install {

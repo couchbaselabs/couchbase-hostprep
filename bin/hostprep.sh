@@ -7,14 +7,17 @@ TYPE="generic"
 VERSION="7.0.2-6703"
 PKGMGR="yum"
 SVGMGR="systemctl"
-PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h ]
+ADMINUSER="admin"
+PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h | -u | -U ]
              -t Host type
              -v Couchbase version
              -n DNS server
              -d DNS domain
-             -h Hostname"
+             -h Hostname
+             -u Admin username
+             -U Non-root user to pattern"
 
-while getopts "t:v:n:d:h:" opt
+while getopts "t:v:n:d:h:u:U:" opt
 do
   case $opt in
     t)
@@ -31,6 +34,12 @@ do
       ;;
     h)
       HOSTNAME=$OPTARG
+      ;;
+    u)
+      ADMINUSER=$OPTARG
+      ;;
+    U)
+      COPYUSER=$OPTARG
       ;;
     \?)
       print_usage
