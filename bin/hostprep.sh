@@ -66,6 +66,9 @@ case $TYPE in
     disable_firewall
     enable_chrony
     ;;
+  basic)
+    prep_basic
+    ;;
   *)
     err_exit "Unknown node type $TYPE"
     ;;

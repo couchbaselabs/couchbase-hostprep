@@ -320,3 +320,19 @@ function enable_chrony {
     systemctl start chronyd
   fi
 }
+
+function prep_basic {
+  exec 2>&1
+  echo "Starting general host prep." | log_output
+  set_linux_type
+  echo "System type: $LINUXTYPE" | log_output
+  nm_check | log_output
+  host_name | log_output
+  add_admin_user | log_output
+  disable_thp | log_output
+  config_swappiness | log_output
+  install_sw_generic | log_output
+  enable_docker | log_output
+  disable_firewall | log_output
+  enable_chrony | log_output
+}
