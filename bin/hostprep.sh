@@ -57,10 +57,12 @@ case $TYPE in
   generic)
     prep_generic
     enable_docker
+    disable_firewall
     ;;
   cbnode)
     prep_generic
     cb_install
+    disable_firewall
     ;;
   *)
     err_exit "Unknown node type $TYPE"

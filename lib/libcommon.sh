@@ -304,3 +304,11 @@ function cb_install {
   echo "System type: $LINUXTYPE" | log_output
   install_sw_couchbase | log_output
 }
+
+function disable_firewall {
+  systemctl status firewalld >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    systemctl stop firewalld
+    systemctl disable firewalld
+  fi
+}
