@@ -312,3 +312,11 @@ function disable_firewall {
     systemctl disable firewalld
   fi
 }
+
+function enable_chrony {
+  if [ -z "$(ps -ef |grep ntpd |grep -v grep)" -a -z "$(ps -ef |grep chronyd |grep -v grep)" ]; then
+    yum install -q -y chrony
+    systemctl enable chronyd
+    systemctl start chronyd
+  fi
+}

@@ -58,11 +58,13 @@ case $TYPE in
     prep_generic
     enable_docker
     disable_firewall
+    enable_chrony
     ;;
   cbnode)
     prep_generic
     cb_install
     disable_firewall
+    enable_chrony
     ;;
   *)
     err_exit "Unknown node type $TYPE"
