@@ -4,7 +4,7 @@ SCRIPTDIR=$(cd $(dirname $0) && pwd)
 PKGDIR=$(dirname $SCRIPTDIR)
 source $PKGDIR/lib/libcommon.sh
 TYPE="generic"
-CB_VERSION="7.0.2-6703"
+CB_VERSION="7.0.3-7031"
 PKGMGR="yum"
 SVGMGR="systemctl"
 ADMINUSER="admin"
@@ -62,6 +62,12 @@ case $TYPE in
     ;;
   cbnode)
     prep_generic
+    cb_install
+    disable_firewall
+    enable_chrony
+    ;;
+  couchbase)
+    prep_couchbase
     cb_install
     disable_firewall
     enable_chrony

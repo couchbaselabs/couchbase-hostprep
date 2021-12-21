@@ -171,6 +171,7 @@ function add_admin_user {
   fi
 }
 
+# shellcheck disable=SC2120
 function disable_thp {
 echo "Disabling transparent huge pages."
 
@@ -276,6 +277,17 @@ function prep_generic {
   nm_check | log_output
   host_dns | log_output
   host_name | log_output
+  add_admin_user | log_output
+  disable_thp | log_output
+  config_swappiness | log_output
+  install_sw_generic | log_output
+}
+
+function prep_couchbase {
+  exec 2>&1
+  echo "Starting general host prep." | log_output
+  set_linux_type
+  echo "System type: $LINUXTYPE" | log_output
   add_admin_user | log_output
   disable_thp | log_output
   config_swappiness | log_output
