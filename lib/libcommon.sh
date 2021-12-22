@@ -232,7 +232,7 @@ function install_sw_generic {
   case $LINUXTYPE in
   centos)
     install_pkg epel-release
-    install_pkg bzip2 jq git python-pip wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
+    install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
@@ -257,6 +257,7 @@ function install_sw_couchbase {
     curl -s -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
     install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
     install_pkg couchbase-server-${CB_VERSION}
+    install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"
@@ -370,7 +371,7 @@ function cb_node_remove {
 }
 
 function cb_init_debug {
-  exec &> >(tee -a /var/tmp/debug.out)
+  (
   echo "Debug mode"
   if [ -f /etc/cb_node.cfg ]; then
     echo "CB Config File:"
@@ -378,6 +379,7 @@ function cb_init_debug {
   else
     echo "No CB Config File."
   fi
+  ) | tee /var/tmp/debug.out
 }
 
 function cb_write_node_config {
