@@ -349,6 +349,10 @@ function prep_basic {
   enable_chrony | log_output
 }
 
+function cb_node_setup {
+  echo "Configuring a Couchbase node"
+}
+
 function cb_node_init {
   echo "Couchbase Node Init"
 }
@@ -357,12 +361,25 @@ function cb_node_add {
   echo "Couchbase Node Add"
 }
 
+function cb_rebalance {
+  echo "Couchbase rebalance"
+}
+
 function cb_node_remove {
   echo "Couchbase Node Remove"
 }
 
 function cb_init_debug {
-  echo "CB Node = $CB_NODE" > /var/tmp/debug.out
-  echo "Services = $SERVICES" >> /var/tmp/debug.out
-  echo "Index Memory Setting = $INDEX_MEM_OPT" >> /var/tmp/debug.out
+  exec &> >(tee -a /var/tmp/debug.out)
+  echo "Debug mode"
+  if [ -f /etc/cb_node.cfg ]; then
+    echo "CB Config File:"
+    cat /etc/cb_node.cfg
+  else
+    echo "No CB Config File."
+  fi
+}
+
+function cb_write_node_config {
+  echo "${NODE_NUMBER}:${MODE}:${CB_NODE}:${SERVICES}:${INDEX_MEM_OPT}" > /etc/cb_node.cfg
 }
