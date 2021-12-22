@@ -257,7 +257,6 @@ function install_sw_couchbase {
     curl -s -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
     install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
     install_pkg couchbase-server-${CB_VERSION}
-    install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"
