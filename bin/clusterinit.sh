@@ -3,14 +3,19 @@
 SCRIPTDIR=$(cd $(dirname $0) && pwd)
 PKGDIR=$(dirname $SCRIPTDIR)
 source $PKGDIR/lib/libcommon.sh
-MODE="init"
+MODE="debug"
 SERVICES="data,index,query"
 INDEX_MEM_OPT="default"
+INTERNAL_IP=""
+EXTERNAL_IP=""
 NODE_NUMBER=1
-PRINT_USAGE="Usage: $0 -m | -i | -s
+PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r
              -m Mode
-             -i Cluster host
-             -s Services"
+             -i Internal node IP
+             -e External node IP
+             -s Services
+             -o Cluster index memory storage option
+             -r Rally node for init"
 
 while getopts "m:i:e:s:o:r:" opt
 do
