@@ -232,7 +232,7 @@ function install_sw_generic {
   case $LINUXTYPE in
   centos)
     install_pkg epel-release
-    install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils
+    install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
@@ -349,12 +349,69 @@ function prep_basic {
   enable_chrony | log_output
 }
 
+function get_mem_settings {
+  HOST_MEMORY=$(free -m | awk 'NR==2 {print $2}')
+  EVENTING_MEM=256
+  HOST_MEMORY=$((HOST_MEMORY - EVENTING_MEM))
+  ANALYTICS_MEM=$(printf "%.0f" $((HOST_MEMORY / 5)))
+  HOST_MEMORY=$((HOST_MEMORY - ANALYTICS_MEM))
+  FTS_MEM=512
+  HOST_MEMORY=$((HOST_MEMORY - FTS_MEM))
+  INDEX_MEM=768
+  HOST_MEMORY=$((HOST_MEMORY - INDEX_MEM))
+  DATA_MEM=$(printf "%.0f" $((HOST_MEMORY * 13/20)))
+}
+
 function cb_node_setup {
   echo "Configuring a Couchbase node"
 }
 
 function cb_node_init {
+  get_mem_settings
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_node_init: no rally node set. Aborting."
+  fi
+  RALLY_HOST_NAME=$(getent hosts $RALLY_NODE | awk '{print $NF}')
   echo "Couchbase Node Init"
+  if /opt/couchbase/bin/couchbase-cli host-list \
+  --cluster $RALLY_HOST_NAME \
+  --username $USERNAME \
+  --password "$PASSWORD" | \
+  grep -q $RALLY_HOST_NAME; then
+    echo "The node already exists in the cluster"
+  else
+  /opt/couchbase/bin/couchbase-cli node-init \
+    --cluster $RALLY_HOST_NAME \
+    --username $USERNAME \
+    --password "$PASSWORD" \
+    --node-init-hostname $RALLY_HOST_NAME \
+    --node-init-data-path $DATAPATH \
+    --node-init-index-path $INDEXPATH \
+    --node-init-analytics-path $ANALYTICSPATH \
+    --node-init-eventing-path $EVENTINGPATH
+  fi
+
+  if /opt/couchbase/bin/couchbase-cli setting-cluster \
+    --cluster $RALLY_HOST_NAME \
+    --username $USERNAME \
+    --password "$PASSWORD" | \
+    grep -q 'ERROR: Cluster is not initialized'; then
+    /opt/couchbase/bin/couchbase-cli cluster-init \
+      --cluster $RALLY_HOST_NAME \
+      --cluster-username $USERNAME \
+      --cluster-password "$PASSWORD" \
+      --cluster-port 8091 \
+      --cluster-ramsize $DATA_MEM \
+      --cluster-fts-ramsize $FTS_MEM \
+      --cluster-index-ramsize $INDEX_MEM \
+      --cluster-eventing-ramsize $EVENTING_MEM \
+      --cluster-analytics-ramsize $ANALYTICS_MEM \
+      --cluster-name $CLUSTER_NAME \
+      --index-storage-setting $INDEX_MEM_OPT \
+      --services $SERVICES
+  else
+    echo "Already initialized"
+  fi
 }
 
 function cb_node_add {
@@ -370,6 +427,7 @@ function cb_node_remove {
 }
 
 function cb_init_debug {
+  get_mem_settings
   (
   echo "Debug mode"
   echo "Rally node: $RALLY_NODE"
@@ -386,6 +444,11 @@ function cb_init_debug {
   echo "EXTERNAL_IP = $EXTERNAL_IP"
   echo "SERVICES = $SERVICES"
   echo "INDEX_MEM_OPT = $INDEX_MEM_OPT"
+  echo "DATA_MEM = $DATA_MEM"
+  echo "FTS_MEM = $FTS_MEM"
+  echo "INDEX_MEM = $INDEX_MEM"
+  echo "EVENTING_MEM = $EVENTING_MEM"
+  echo "ANALYTICS_MEM = $ANALYTICS_MEM"
   ) | tee /var/tmp/debug.out
 }
 

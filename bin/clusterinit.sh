@@ -9,6 +9,13 @@ INDEX_MEM_OPT="default"
 INTERNAL_IP=""
 EXTERNAL_IP=""
 NODE_NUMBER=1
+USERNAME="Administrator"
+PASSWORD="password"
+CLUSTER_NAME="cbdb"
+DATAPATH=/opt/couchbase/var/lib/couchbase/data
+INDEXPATH=/opt/couchbase/var/lib/couchbase/data
+ANALYTICSPATH=/opt/couchbase/var/lib/couchbase/data
+EVENTINGPATH=/opt/couchbase/var/lib/couchbase/data
 PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r
              -m Mode
              -i Internal node IP
@@ -17,7 +24,7 @@ PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r
              -o Cluster index memory storage option
              -r Rally node for init"
 
-while getopts "m:i:e:s:o:r:" opt
+while getopts "m:i:e:s:o:r:u:p:n:" opt
 do
   case $opt in
     m)
@@ -37,6 +44,15 @@ do
       ;;
     r)
       RALLY_NODE=$OPTARG
+      ;;
+    u)
+      USERNAME=$OPTARG
+      ;;
+    p)
+      PASSWORD=$OPTARG
+      ;;
+    n)
+      CLUSTER_NAME=$OPTARG
       ;;
     \?)
       print_usage
