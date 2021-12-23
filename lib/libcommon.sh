@@ -399,4 +399,5 @@ function cb_read_node_config {
     EXTERNAL_IP=$(cat /etc/cb_node.cfg | cut -d: -f2)
     SERVICES=$(cat /etc/cb_node.cfg | cut -d: -f3)
     INDEX_MEM_OPT=$(cat /etc/cb_node.cfg | cut -d: -f4)
+  fi
 }
