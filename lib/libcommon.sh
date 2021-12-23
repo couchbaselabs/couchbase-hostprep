@@ -380,7 +380,7 @@ function cb_cluster_setup {
     err_exit "cb_cluster_setup: Couchbase CLI not found."
   fi
 
-  if [ "$INTERNAL_IP" -eq "$RALLY_NODE" ]; then
+  if [ "$INTERNAL_IP" = "$RALLY_NODE" ]; then
     cb_node_init
   else
     cb_node_add
