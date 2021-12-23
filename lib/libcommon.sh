@@ -362,17 +362,53 @@ function get_mem_settings {
   DATA_MEM=$(printf "%.0f" $((HOST_MEMORY * 13/20)))
 }
 
-function cb_node_setup {
-  echo "Configuring a Couchbase node"
+function cb_cluster_setup {
+  get_mem_settings
+  cb_read_node_config
+
+  echo "Configuring a Couchbase cluster"
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_cluster_setup: no rally node set. Aborting."
+  fi
+
+  if [ -z "$INTERNAL_IP" ]; then
+    err_exit "cb_cluster_setup: no IP set for the node. Aborting."
+  fi
+
+  if [ ! -x /opt/couchbase/bin/couchbase-cli ]; then
+    err_exit "cb_cluster_setup: Couchbase CLI not found."
+  fi
+
+  if [ "$INTERNAL_IP" -eq "$RALLY_NODE" ]; then
+    cb_node_init
+  else
+    cb_node_add
+  fi
 }
 
 function cb_node_init {
   get_mem_settings
+
+  if [ ! -f /etc/cb_node.cfg ]; then
+    err_exit "No local node config file /etc/cb_node.cfg found."
+  fi
+
+  cb_read_node_config
+
   if [ -z "$RALLY_NODE" ]; then
     err_exit "cb_node_init: no rally node set. Aborting."
   fi
-  RALLY_HOST_NAME=$(getent hosts $RALLY_NODE | awk '{print $NF}')
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    RALLY_HOST_NAME=$REVERSE_LOOKUP
+  else
+    RALLY_HOST_NAME=$RALLY_NODE
+  fi
+
   echo "Couchbase Node Init"
+
   if /opt/couchbase/bin/couchbase-cli host-list \
   --cluster $RALLY_HOST_NAME \
   --username $USERNAME \
@@ -412,14 +448,138 @@ function cb_node_init {
   else
     echo "Already initialized"
   fi
+
+  if [ -n "$EXTERNAL_IP" ]; then
+    cb_node_alt_address
+  fi
 }
 
 function cb_node_add {
+  get_mem_settings
+
+    if [ ! -f /etc/cb_node.cfg ]; then
+    err_exit "No local node config file /etc/cb_node.cfg found."
+  fi
+
+  cb_read_node_config
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_node_add: no rally node set. Aborting."
+  fi
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    RALLY_HOST_NAME=$REVERSE_LOOKUP
+  else
+    RALLY_HOST_NAME=$RALLY_NODE
+  fi
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $INTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    ADD_HOST_NAME=$REVERSE_LOOKUP
+  else
+    ADD_HOST_NAME=$INTERNAL_IP
+  fi
+
   echo "Couchbase Node Add"
+
+  if /opt/couchbase/bin/couchbase-cli host-list \
+  --cluster $RALLY_HOST_NAME \
+  --username $USERNAME \
+  --password "$PASSWORD" | \
+  grep -q $ADD_HOST_NAME; then
+    echo "The node already exists in the cluster"
+  else
+  /opt/couchbase/bin/couchbase-cli node-init \
+    --cluster $ADD_HOST_NAME \
+    --username $USERNAME \
+    --password "$PASSWORD" \
+    --node-init-hostname $ADD_HOST_NAME \
+    --node-init-data-path $DATAPATH \
+    --node-init-index-path $INDEXPATH \
+    --node-init-analytics-path $ANALYTICSPATH \
+    --node-init-eventing-path $EVENTINGPATH
+  fi
+
+  if /opt/couchbase/bin/couchbase-cli host-list \
+  --cluster $RALLY_HOST_NAME \
+  --username $USERNAME \
+  --password "$PASSWORD" | \
+  grep -q $ADD_HOST_NAME; then
+    echo "The node already exists in the cluster"
+  else
+  /opt/couchbase/bin/couchbase-cli server-add \
+    --cluster $RALLY_HOST_NAME \
+    --username $USERNAME \
+    --password "$PASSWORD" \
+    --server-add-username $USERNAME \
+    --server-add-password "$PASSWORD" \
+    --server-add $ADD_HOST_NAME \
+    --services $SERVICES
+  fi
+
+  if [ -n "$EXTERNAL_IP" ]; then
+    cb_node_alt_address
+  fi
+}
+
+function cb_node_alt_address {
+  cb_read_node_config
+
+  if [ -z "$EXTERNAL_IP" ]; then
+    return
+  fi
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_node_alt_address: no rally node set. Aborting."
+  fi
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    RALLY_HOST_NAME=$REVERSE_LOOKUP
+  else
+    RALLY_HOST_NAME=$RALLY_NODE
+  fi
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $INTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    ADD_HOST_NAME=$REVERSE_LOOKUP
+  else
+    ADD_HOST_NAME=$INTERNAL_IP
+  fi
+
+  REVERSE_LOOKUP=$(dig +noall +answer -x $EXTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    EXT_HOST_NAME=$REVERSE_LOOKUP
+  else
+    EXT_HOST_NAME=$EXTERNAL_IP
+  fi
+
+  echo "Couchbase Node Alternate Address"
+
+  /opt/couchbase/bin/couchbase-cli setting-alternate-address \
+    --cluster $RALLY_HOST_NAME \
+    --username $USERNAME \
+    --password "$PASSWORD" \
+    --set \
+    --node $ADD_HOST_NAME \
+    --hostname $EXT_HOST_NAME
 }
 
 function cb_rebalance {
+  cb_read_node_config
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_rebalance: no rally node set. Aborting."
+  fi
+
   echo "Couchbase rebalance"
+
+  /opt/couchbase/bin/couchbase-cli rebalance \
+    --cluster $RALLY_NODE \
+    --username $USERNAME \
+    --password "$PASSWORD" \
+    --no-progress-bar
 }
 
 function cb_node_remove {

@@ -68,7 +68,10 @@ fi
 
 case $MODE in
   config)
-    cb_node_setup
+    cb_cluster_setup
+    ;;
+  rebalance)
+    cb_rebalance
     ;;
   remove)
     cb_node_remove
