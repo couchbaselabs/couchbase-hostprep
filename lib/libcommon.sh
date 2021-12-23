@@ -481,6 +481,12 @@ function cb_node_add {
     ADD_HOST_NAME=$INTERNAL_IP
   fi
 
+  echo "Waiting for cluster to initialize."
+  cb_wait_init
+  if [ $? -ne 0 ]; then
+    err_exit "Timeout waiting for cluster to initialize"
+  fi
+
   echo "Couchbase Node Add"
 
   if /opt/couchbase/bin/couchbase-cli host-list \
@@ -580,6 +586,31 @@ function cb_rebalance {
     --username $USERNAME \
     --password "$PASSWORD" \
     --no-progress-bar
+}
+
+function cb_wait_init {
+  RETRY=1
+  cb_read_node_config
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_wait_init: no rally node set. Aborting."
+  fi
+
+  while true
+  do
+    /opt/couchbase/bin/couchbase-cli server-list \
+      --cluster $RALLY_NODE \
+      --username $USERNAME \
+      --password "$PASSWORD" >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      return 0
+    fi
+    if [ "$RETRY" -eq 20 ]; then
+      return 1
+    fi
+    RETRY=$((RETRY + 1))
+    sleep 1
+  done
 }
 
 function cb_node_remove {
