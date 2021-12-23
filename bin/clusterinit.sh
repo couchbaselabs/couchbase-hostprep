@@ -12,23 +12,26 @@ PRINT_USAGE="Usage: $0 -m | -i | -s
              -i Cluster host
              -s Services"
 
-while getopts "m:i:s:h:n:" opt
+while getopts "m:i:e:s:o:r:" opt
 do
   case $opt in
     m)
       MODE=$OPTARG
       ;;
-    h)
-      CB_NODE=$OPTARG
+    i)
+      INTERNAL_IP=$OPTARG
+      ;;
+    e)
+      EXTERNAL_IP=$OPTARG
       ;;
     s)
       SERVICES=$OPTARG
       ;;
-    i)
+    o)
       INDEX_MEM_OPT=$OPTARG
       ;;
-    n)
-      NODE_NUMBER=$OPTARG
+    r)
+      RALLY_NODE=$OPTARG
       ;;
     \?)
       print_usage

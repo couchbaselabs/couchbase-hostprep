@@ -372,15 +372,31 @@ function cb_node_remove {
 function cb_init_debug {
   (
   echo "Debug mode"
+  echo "Rally node: $RALLY_NODE"
   if [ -f /etc/cb_node.cfg ]; then
+    cb_read_node_config
     echo "CB Config File:"
+    echo "==============="
     cat /etc/cb_node.cfg
+    echo "==============="
   else
     echo "No CB Config File."
   fi
+  echo "INTERNAL_IP = $INTERNAL_IP"
+  echo "EXTERNAL_IP = $EXTERNAL_IP"
+  echo "SERVICES = $SERVICES"
+  echo "INDEX_MEM_OPT = $INDEX_MEM_OPT"
   ) | tee /var/tmp/debug.out
 }
 
 function cb_write_node_config {
-  echo "${NODE_NUMBER}:${MODE}:${CB_NODE}:${SERVICES}:${INDEX_MEM_OPT}" > /etc/cb_node.cfg
+  echo "${INTERNAL_IP}:${EXTERNAL_IP}:${SERVICES}:${INDEX_MEM_OPT}" > /etc/cb_node.cfg
+}
+
+function cb_read_node_config {
+  if [ -f /etc/cb_node.cfg ]; then
+    INTERNAL_IP=$(cat /etc/cb_node.cfg | cut -d: -f1)
+    EXTERNAL_IP=$(cat /etc/cb_node.cfg | cut -d: -f2)
+    SERVICES=$(cat /etc/cb_node.cfg | cut -d: -f3)
+    INDEX_MEM_OPT=$(cat /etc/cb_node.cfg | cut -d: -f4)
 }
