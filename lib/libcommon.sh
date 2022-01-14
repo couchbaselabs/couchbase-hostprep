@@ -605,7 +605,7 @@ function cb_wait_init {
     if [ $? -eq 0 ]; then
       return 0
     fi
-    if [ "$RETRY" -eq 20 ]; then
+    if [ "$RETRY" -eq 60 ]; then
       return 1
     fi
     RETRY=$((RETRY + 1))
