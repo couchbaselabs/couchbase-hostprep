@@ -407,7 +407,7 @@ function cb_node_init {
     RALLY_HOST_NAME=$RALLY_NODE
   fi
 
-  echo "Couchbase Node Init"
+  echo "Couchbase Cluster $CLUSTER_NAME Init On $RALLY_HOST_NAME"
 
   if /opt/couchbase/bin/couchbase-cli host-list \
   --cluster $RALLY_HOST_NAME \
@@ -481,13 +481,13 @@ function cb_node_add {
     ADD_HOST_NAME=$INTERNAL_IP
   fi
 
-  echo "Waiting for cluster to initialize."
+  echo "Waiting for cluster to initialize on $RALLY_HOST_NAME."
   cb_wait_init
   if [ $? -ne 0 ]; then
     err_exit "Timeout waiting for cluster to initialize"
   fi
 
-  echo "Couchbase Node Add"
+  echo "Couchbase Node $ADD_HOST_NAME Add"
 
   if /opt/couchbase/bin/couchbase-cli host-list \
   --cluster $RALLY_HOST_NAME \
