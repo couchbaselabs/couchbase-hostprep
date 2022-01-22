@@ -400,7 +400,7 @@ function cb_node_init {
     err_exit "cb_node_init: no rally node set. Aborting."
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | grep -v '^;;' | awk '{print $NF}' | sed -e 's/\.$//')
   if [ -n "$REVERSE_LOOKUP" ]; then
     RALLY_HOST_NAME=$REVERSE_LOOKUP
   else
