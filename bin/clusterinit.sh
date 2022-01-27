@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 SCRIPTDIR=$(cd $(dirname $0) && pwd)
 PKGDIR=$(dirname $SCRIPTDIR)
