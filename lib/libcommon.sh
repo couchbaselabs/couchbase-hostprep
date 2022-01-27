@@ -43,23 +43,33 @@ function log_output {
 }
 
 function set_linux_type {
-  source /etc/os-release
-  export LINUXTYPE=$ID
-  case $ID in
-  centos)
-    PKGMGR="yum"
-    SVGMGR="systemctl"
-    ;;
-  *)
-    err_exit "Unknown Linux distribution $ID"
-    ;;
-  esac
+  if [ -z "$LINUXTYPE" ]; then
+    source /etc/os-release
+    export LINUXTYPE=$ID
+    case $ID in
+    centos)
+      PKGMGR="yum"
+      SVCMGR="systemctl"
+      ;;
+    ubuntu)
+      PKGMGR="apt"
+      SVCMGR="systemctl"
+      ;;
+    *)
+      err_exit "Unknown Linux distribution $ID"
+      ;;
+    esac
+  fi
 }
 
 function install_pkg {
   case $PKGMGR in
   yum)
     yum install -q -y $@
+    ;;
+  apt)
+    apt-get update
+    apt-get install -q -y $@
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -72,6 +82,9 @@ function install_pkg_file {
   yum)
     rpm -i $@
     ;;
+  apt)
+    dpkg -i $@
+    ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
     ;;
@@ -79,12 +92,12 @@ function install_pkg_file {
 }
 
 function service_control {
-  case $SVGMGR in
+  case $SVCMGR in
   systemctl)
     systemctl $@
     ;;
   *)
-    err_exit "Unknown service manager $SVGMGR"
+    err_exit "Unknown service manager $SVCMGR"
     ;;
   esac
 }
@@ -94,6 +107,10 @@ function nm_check {
   centos)
     local PKGNAME="NetworkManager"
     local SVCNAME=$PKGNAME
+    ;;
+  ubuntu)
+    local PKGNAME="network-manager"
+    local SVCNAME="NetworkManager.service"
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"
@@ -204,7 +221,17 @@ esac
 EOF
 
 chmod 755 /etc/init.d/disable-thp
-chkconfig --add disable-thp
+case $LINUXTYPE in
+centos)
+  chkconfig --add disable-thp
+  ;;
+ubuntu)
+  update-rc.d disable-thp defaults
+  ;;
+*)
+  err_exit "Unknown linux type $LINUXTYPE"
+  ;;
+esac
 
 which tuned-adm >/dev/null 2>&1
 if [ $? -eq 0 ]; then
@@ -229,11 +256,20 @@ echo 0 > /proc/sys/vm/swappiness
 }
 
 function install_sw_generic {
+  set_linux_type
   case $LINUXTYPE in
   centos)
     install_pkg epel-release
     install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    install_pkg docker-ce docker-ce-cli containerd.io
+    usermod -a -G docker $ADMINUSER
+    ;;
+  ubuntu)
+    install_pkg bzip2 jq git python3 python3-pip python3-dev wget vim xmlstarlet openjdk-8-jdk maven netcat sysstat apt-utils bind9-utils ca-certificates curl gnupg lsb-release
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+      | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
     ;;
@@ -252,11 +288,17 @@ function install_sw_generic {
 }
 
 function install_sw_couchbase {
+  set_linux_type
   case $LINUXTYPE in
   centos)
     curl -s -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
     install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
     install_pkg couchbase-server-${CB_VERSION}
+    ;;
+  ubuntu)
+    curl -s -o /var/tmp/couchbase-release-1.0-amd64.deb https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
+    install_pkg_file /var/tmp/couchbase-release-1.0-amd64.deb
+    install_pkg couchbase-server=${CB_VERSION}
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"
@@ -295,6 +337,7 @@ function prep_couchbase {
 }
 
 function enable_docker {
+  set_linux_type
   case $LINUXTYPE in
   centos)
     local PKGNAME="docker"
@@ -318,18 +361,42 @@ function cb_install {
 }
 
 function disable_firewall {
-  systemctl status firewalld >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    systemctl stop firewalld
-    systemctl disable firewalld
-  fi
+  set_linux_type
+  case $LINUXTYPE in
+  centos)
+    systemctl status firewalld >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      service_control stop firewalld
+      service_control disable firewalld
+    fi
+    ;;
+  ubuntu)
+    ufw disable
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
 }
 
 function enable_chrony {
   if [ -z "$(ps -ef |grep ntpd |grep -v grep)" -a -z "$(ps -ef |grep chronyd |grep -v grep)" ]; then
-    yum install -q -y chrony
-    systemctl enable chronyd
-    systemctl start chronyd
+    set_linux_type
+    case $LINUXTYPE in
+    centos)
+      install_pkg chrony
+      service_control enable chronyd
+      service_control start chronyd
+      ;;
+    ubuntu)
+      install_pkg chrony
+      service_control enable chronyd
+      service_control start chronyd
+      ;;
+    *)
+      err_exit "Unknown linux type $LINUXTYPE"
+      ;;
+    esac
   fi
 }
 
