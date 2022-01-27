@@ -437,6 +437,18 @@ function get_mem_settings {
   DATA_MEM=$(printf "%.0f" $((HOST_MEMORY * 13/20)))
 }
 
+function dns_reverse_lookup {
+[ -z "$1" ] && return
+for dnsname in $(dig +noall +answer -x $1 | grep -v '^;;' | awk '{print $NF}' | sed -e 's/\.$//')
+do
+  check_dns_authority=$(dig +noall +authority $dnsname | grep -v '^;;')
+  if [ -n "$check_dns_authority" ]; then
+    echo $dnsname
+    return
+  fi
+done
+}
+
 function cb_cluster_setup {
   get_mem_settings
   cb_read_node_config
@@ -475,7 +487,7 @@ function cb_node_init {
     err_exit "cb_node_init: no rally node set. Aborting."
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | grep -v '^;;' | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $RALLY_NODE)
   if [ -n "$REVERSE_LOOKUP" ]; then
     RALLY_HOST_NAME=$REVERSE_LOOKUP
   else
@@ -542,14 +554,14 @@ function cb_node_add {
     err_exit "cb_node_add: no rally node set. Aborting."
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $RALLY_NODE)
   if [ -n "$REVERSE_LOOKUP" ]; then
     RALLY_HOST_NAME=$REVERSE_LOOKUP
   else
     RALLY_HOST_NAME=$RALLY_NODE
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $INTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $INTERNAL_IP)
   if [ -n "$REVERSE_LOOKUP" ]; then
     ADD_HOST_NAME=$REVERSE_LOOKUP
   else
@@ -615,21 +627,21 @@ function cb_node_alt_address {
     err_exit "cb_node_alt_address: no rally node set. Aborting."
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $RALLY_NODE | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $RALLY_NODE)
   if [ -n "$REVERSE_LOOKUP" ]; then
     RALLY_HOST_NAME=$REVERSE_LOOKUP
   else
     RALLY_HOST_NAME=$RALLY_NODE
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $INTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $INTERNAL_IP)
   if [ -n "$REVERSE_LOOKUP" ]; then
     ADD_HOST_NAME=$REVERSE_LOOKUP
   else
     ADD_HOST_NAME=$INTERNAL_IP
   fi
 
-  REVERSE_LOOKUP=$(dig +noall +answer -x $EXTERNAL_IP | awk '{print $NF}' | sed -e 's/\.$//')
+  REVERSE_LOOKUP=$(dns_reverse_lookup $EXTERNAL_IP)
   if [ -n "$REVERSE_LOOKUP" ]; then
     EXT_HOST_NAME=$REVERSE_LOOKUP
   else
