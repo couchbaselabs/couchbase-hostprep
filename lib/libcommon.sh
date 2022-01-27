@@ -50,10 +50,12 @@ function set_linux_type {
     centos)
       PKGMGR="yum"
       SVCMGR="systemctl"
+      DEFAULT_ADMIN_GROUP="wheel"
       ;;
     ubuntu)
       PKGMGR="apt"
       SVCMGR="systemctl"
+      DEFAULT_ADMIN_GROUP="sudo"
       ;;
     *)
       err_exit "Unknown Linux distribution $ID"
@@ -63,6 +65,7 @@ function set_linux_type {
 }
 
 function install_pkg {
+  set_linux_type
   case $PKGMGR in
   yum)
     yum install -q -y $@
@@ -78,6 +81,7 @@ function install_pkg {
 }
 
 function install_pkg_file {
+  set_linux_type
   case $PKGMGR in
   yum)
     rpm -i $@
@@ -92,6 +96,7 @@ function install_pkg_file {
 }
 
 function service_control {
+  set_linux_type
   case $SVCMGR in
   systemctl)
     systemctl $@
@@ -103,6 +108,7 @@ function service_control {
 }
 
 function nm_check {
+  set_linux_type
   case $LINUXTYPE in
   centos)
     local PKGNAME="NetworkManager"
@@ -158,6 +164,7 @@ function host_name {
 }
 
 function add_admin_user {
+  set_linux_type
   local MYGID=$(cat /etc/group | grep -v nobody | cut -d: -f3 | sort -n | tail -1)
   local MYUID=$(cat /etc/passwd | grep -v nobody | cut -d: -f3 | sort -n | tail -1)
   MYGID=$((MYGID + 1))
@@ -170,11 +177,12 @@ function add_admin_user {
 
   grep ^${ADMINUSER} /etc/passwd >/dev/null 2>&1
   if [ $? -ne 0 ]; then
-    useradd -u $MYUID -g $ADMINUSER $ADMINUSER
+    useradd -m -u $MYUID -g $ADMINUSER $ADMINUSER
   fi
 
-  usermod -a -G wheel $ADMINUSER
-  sed -i -e 's/^# %wheel/%wheel/' /etc/sudoers
+  usermod -a -G $DEFAULT_ADMIN_GROUP $ADMINUSER
+  echo "${ADMINUSER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${ADMINUSER}
+  chmod 440 /etc/sudoers.d/${ADMINUSER}
   [ ! -d /home/${ADMINUSER}/.ssh ] && mkdir /home/${ADMINUSER}/.ssh
   chown ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/.ssh
   chmod 700 /home/${ADMINUSER}/.ssh
@@ -390,8 +398,8 @@ function enable_chrony {
       ;;
     ubuntu)
       install_pkg chrony
-      service_control enable chronyd
-      service_control start chronyd
+      service_control enable chrony
+      service_control start chrony
       ;;
     *)
       err_exit "Unknown linux type $LINUXTYPE"
