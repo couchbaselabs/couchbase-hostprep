@@ -314,8 +314,10 @@ function install_sw_couchbase {
   esac
 
 cat <<EOF > /etc/security/limits.d/91-couchbase.conf
-couchbase soft nproc 4096
-couchbase hard nproc 16384
+* soft nproc 10000
+* hard nproc 10000
+* soft nofile 70000
+* hard nofile 70000
 EOF
 }
 
