@@ -733,7 +733,7 @@ function cb_init_debug {
 }
 
 function cb_write_node_config {
-  echo "${INTERNAL_IP}:${EXTERNAL_IP}:${SERVICES}:${INDEX_MEM_OPT}" > /etc/cb_node.cfg
+  echo "${INTERNAL_IP}:${EXTERNAL_IP}:${SERVICES}:${INDEX_MEM_OPT}:${GROUP_NAME}" > /etc/cb_node.cfg
 }
 
 function cb_read_node_config {
@@ -742,5 +742,6 @@ function cb_read_node_config {
     EXTERNAL_IP=$(cat /etc/cb_node.cfg | cut -d: -f2)
     SERVICES=$(cat /etc/cb_node.cfg | cut -d: -f3)
     INDEX_MEM_OPT=$(cat /etc/cb_node.cfg | cut -d: -f4)
+    GROUP_NAME=$(cat /etc/cb_node.cfg | cut -d: -f5)
   fi
 }

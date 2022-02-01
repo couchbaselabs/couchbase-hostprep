@@ -8,6 +8,7 @@ SERVICES="data,index,query"
 INDEX_MEM_OPT="default"
 INTERNAL_IP=""
 EXTERNAL_IP=""
+GROUP_NAME=""
 NODE_NUMBER=1
 USERNAME="Administrator"
 PASSWORD="password"
@@ -16,15 +17,16 @@ DATAPATH=/opt/couchbase/var/lib/couchbase/data
 INDEXPATH=/opt/couchbase/var/lib/couchbase/data
 ANALYTICSPATH=/opt/couchbase/var/lib/couchbase/data
 EVENTINGPATH=/opt/couchbase/var/lib/couchbase/data
-PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r
+PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r | -g
              -m Mode
              -i Internal node IP
              -e External node IP
              -s Services
              -o Cluster index memory storage option
+             -g Server group name
              -r Rally node for init"
 
-while getopts "m:i:e:s:o:r:u:p:n:" opt
+while getopts "m:i:e:s:o:r:u:p:n:g:" opt
 do
   case $opt in
     m)
@@ -53,6 +55,9 @@ do
       ;;
     n)
       CLUSTER_NAME=$OPTARG
+      ;;
+    g)
+      GROUP_NAME=$OPTARG
       ;;
     \?)
       print_usage
