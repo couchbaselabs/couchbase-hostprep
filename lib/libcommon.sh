@@ -541,12 +541,16 @@ function cb_node_init {
   if [ -n "$EXTERNAL_IP" ]; then
     cb_node_alt_address
   fi
+
+  if [ -n "$GROUP_NAME" ]; then
+    cb_server_group
+  fi
 }
 
 function cb_node_add {
   get_mem_settings
 
-    if [ ! -f /etc/cb_node.cfg ]; then
+  if [ ! -f /etc/cb_node.cfg ]; then
     err_exit "No local node config file /etc/cb_node.cfg found."
   fi
 
@@ -616,6 +620,10 @@ function cb_node_add {
   if [ -n "$EXTERNAL_IP" ]; then
     cb_node_alt_address
   fi
+
+  if [ -n "$GROUP_NAME" ]; then
+    cb_server_group
+  fi
 }
 
 function cb_node_alt_address {
@@ -675,6 +683,71 @@ function cb_rebalance {
     --username $USERNAME \
     --password "$PASSWORD" \
     --no-progress-bar
+}
+
+function cb_server_group {
+  if [ ! -f /etc/cb_node.cfg ]; then
+    err_exit "No local node config file /etc/cb_node.cfg found."
+  fi
+
+  cb_read_node_config
+
+  if [ -z "$RALLY_NODE" ]; then
+    err_exit "cb_node_add: no rally node set. Aborting."
+  fi
+
+  REVERSE_LOOKUP=$(dns_reverse_lookup $RALLY_NODE)
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    RALLY_HOST_NAME=$REVERSE_LOOKUP
+  else
+    RALLY_HOST_NAME=$RALLY_NODE
+  fi
+
+  REVERSE_LOOKUP=$(dns_reverse_lookup $INTERNAL_IP)
+  if [ -n "$REVERSE_LOOKUP" ]; then
+    LOCAL_HOST_NAME=$REVERSE_LOOKUP
+  else
+    LOCAL_HOST_NAME=$INTERNAL_IP
+  fi
+
+  if [ -z "$GROUP_NAME" ]; then
+    info_msg "${LOCAL_HOST_NAME}: No server group defined, using default group."
+    return
+  fi
+
+  if /opt/couchbase/bin/couchbase-cli group-manage \
+      --cluster $RALLY_NODE \
+      --username $USERNAME \
+      --password "$PASSWORD" \
+      --list \
+      --group-name "$GROUP_NAME" >/dev/null 2>&1
+    then
+      echo "${LOCAL_HOST_NAME}: Server group $GROUP_NAME already exists."
+    else
+      /opt/couchbase/bin/couchbase-cli group-manage \
+        --cluster $RALLY_NODE \
+        --username $USERNAME \
+        --password "$PASSWORD" \
+        --create \
+        --group-name "$GROUP_NAME"
+        [ $? -ne 0 ] && err_exit "${LOCAL_HOST_NAME}: can not create group $GROUP_NAME"
+    fi
+
+    CURRENT_GROUP=$(curl -sk -X GET -u "${USERNAME}:${PASSWORD}" http://${RALLY_NODE}:8091/pools/default/serverGroups \
+    | jq --arg host $LOCAL_HOST_NAME -r '.groups[] | .name as $NAME | .nodes[] | select(.hostname | contains($host)) | $NAME')
+
+    if [ "$CURRENT_GROUP" != "$GROUP_NAME" ]; then
+    /opt/couchbase/bin/couchbase-cli group-manage \
+      --cluster $RALLY_NODE \
+      --username $USERNAME \
+      --password "$PASSWORD" \
+      --move-servers $LOCAL_HOST_NAME \
+      --from-group "$CURRENT_GROUP" \
+      --to-group "$GROUP_NAME"
+      [ $? -ne 0 ] && err_exit "${LOCAL_HOST_NAME}: can not move from $CURRENT_GROUP to $GROUP_NAME"
+    fi
+
+    info_msg "${LOCAL_HOST_NAME}: is now a member of $GROUP_NAME"
 }
 
 function cb_wait_init {
