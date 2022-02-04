@@ -439,15 +439,27 @@ function get_mem_settings {
   DATA_MEM=$(printf "%.0f" $((HOST_MEMORY * 13/20)))
 }
 
+function dns_name_server_lookup {
+[ -z "$1" ] && return
+dnsdomain=$(echo $1 | sed -e 's/^[a-zA-Z0-9-]*\.\(.*\)$/\1/')
+for nameserver in $(dig +noall +answer $dnsdomain NS | grep -v '^;;' | awk '{print $NF}' | sed -e 's/\.$//')
+do
+  echo $nameserver
+done
+}
+
 function dns_reverse_lookup {
 [ -z "$1" ] && return
 for dnsname in $(dig +noall +answer -x $1 | grep -v '^;;' | awk '{print $NF}' | sed -e 's/\.$//')
 do
-  check_dns_authority=$(dig +noall +authority $dnsname | grep -v '^;;')
-  if [ -n "$check_dns_authority" ]; then
-    echo $dnsname
-    return
-  fi
+  for nshost in $(dns_name_server_lookup $dnsname)
+  do
+    check_dns_authority=$(dig @$nshost +noall +authority $dnsname | grep -v '^;;')
+    if [ -n "$check_dns_authority" ]; then
+      echo $dnsname
+      return
+    fi
+  done
 done
 }
 
