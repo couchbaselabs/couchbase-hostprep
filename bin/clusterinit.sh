@@ -36,7 +36,9 @@ do
       INTERNAL_IP=$OPTARG
       ;;
     e)
-      EXTERNAL_IP=$OPTARG
+      if [ "$OPTARG" != "none" ]; then
+        EXTERNAL_IP=$OPTARG
+      fi
       ;;
     s)
       SERVICES=$OPTARG
