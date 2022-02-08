@@ -7,6 +7,7 @@ PKGNAME=$(basename $PKGDIR)
 curl -Is --connect-timeout 4 --retry 3 https://github.com >/dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "Can not connect to GitHub. Refresh cancelled."
+  exit 1
 fi
 
 echo -n "Refreshing $PKGNAME ... "
