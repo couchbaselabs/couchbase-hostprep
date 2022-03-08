@@ -72,6 +72,9 @@ case $TYPE in
     disable_firewall
     enable_chrony
     ;;
+  sdk)
+    prep_sdk
+    ;;
   basic)
     prep_basic
     ;;

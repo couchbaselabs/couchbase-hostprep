@@ -51,11 +51,13 @@ function set_linux_type {
       PKGMGR="yum"
       SVCMGR="systemctl"
       DEFAULT_ADMIN_GROUP="wheel"
+      LINUX_VERSION=$VERSION_ID
       ;;
     ubuntu)
       PKGMGR="apt"
       SVCMGR="systemctl"
       DEFAULT_ADMIN_GROUP="sudo"
+      LINUX_VERSION=$VERSION_CODENAME
       ;;
     *)
       err_exit "Unknown Linux distribution $ID"
@@ -194,6 +196,166 @@ function add_admin_user {
       chown ${ADMINUSER}:${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
     fi
   fi
+}
+
+function setup_libcouchbase_repo {
+set_linux_type
+case $LINUXTYPE in
+centos)
+  case $LINUX_VERSION in
+  7)
+cat <<EOF > /etc/yum.repos.d/couchbase.repo
+[couchbase]
+enabled = 1
+name = libcouchbase package for centos7 x86_64
+baseurl = https://packages.couchbase.com/clients/c/repos/rpm/el7/x86_64
+gpgcheck = 1
+gpgkey = https://packages.couchbase.com/clients/c/repos/rpm/couchbase.key
+EOF
+    ;;
+  8)
+cat <<EOF > /etc/yum.repos.d/couchbase.repo
+[couchbase]
+enabled = 1
+name = libcouchbase package for centos8 x86_64
+baseurl = https://packages.couchbase.com/clients/c/repos/rpm/el8/x86_64
+gpgcheck = 1
+gpgkey = https://packages.couchbase.com/clients/c/repos/rpm/couchbase.key
+EOF
+    ;;
+  *)
+    err_exit "Unsupported CentOS version: $LINUX_VERSION"
+    ;;
+  esac
+  ;;
+ubuntu)
+  curl -s -o /var/tmp/couchbase.key https://packages.couchbase.com/clients/c/repos/deb/couchbase.key
+  apt-key add /var/tmp/couchbase.key
+  case $LINUX_VERSION in
+  bionic)
+    echo "deb https://packages.couchbase.com/clients/c/repos/deb/ubuntu1804 bionic bionic/main" > /etc/apt/sources.list.d/couchbase.list
+    ;;
+  focal)
+    echo "deb https://packages.couchbase.com/clients/c/repos/deb/ubuntu2004 focal focal/main" > /etc/apt/sources.list.d/couchbase.list
+    ;;
+  *)
+    err_exit "Unsupported Ubuntu version: $LINUX_VERSION"
+    ;;
+  esac
+  ;;
+*)
+  err_exit "Unknown linux type $LINUXTYPE"
+  ;;
+esac
+}
+
+function setup_aws_cli {
+    curl -s -o /var/tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    unzip -q /var/tmp/awscliv2.zip -d /var/tmp
+    /var/tmp/aws/install
+}
+
+function setup_gcp_repo {
+set_linux_type
+case $LINUXTYPE in
+  centos)
+  case $LINUX_VERSION in
+    7)
+cat <<EOF > /etc/yum.repos.d/google-cloud-sdk.repo
+[google-cloud-cli]
+name=Google Cloud CLI
+baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+    ;;
+    8)
+cat <<EOF > /etc/yum.repos.d/google-cloud-sdk.repo
+[google-cloud-cli]
+name=Google Cloud CLI
+baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+    ;;
+    *)
+      err_exit "Unsupported CentOS version: $LINUX_VERSION"
+    ;;
+  esac
+  ;;
+  ubuntu)
+  install_pkg apt-transport-https ca-certificates gnupg
+  curl -s -o /var/tmp/gcloud.key https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  apt-key add /var/tmp/gcloud.key
+  echo "deb https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list
+  ;;
+*)
+  err_exit "Unknown linux type $LINUXTYPE"
+  ;;
+esac
+}
+
+function setup_azure_repo {
+set_linux_type
+case $LINUXTYPE in
+  centos)
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+cat <<EOF > /etc/yum.repos.d/google-cloud-sdk.repo
+[azure-cli]
+name=Azure CLI
+baseurl=https://packages.microsoft.com/yumrepos/azure-cli
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+EOF
+  ;;
+  ubuntu)
+  install_pkg ca-certificates curl apt-transport-https lsb-release gnupg
+  curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg
+  AZ_REPO=$(lsb_release -cs)
+  echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" > /etc/apt/sources.list.d/azure-cli.list
+  ;;
+*)
+  err_exit "Unknown linux type $LINUXTYPE"
+  ;;
+esac
+}
+
+function install_sdk_sw {
+  set_linux_type
+  case $LINUXTYPE in
+  centos)
+    setup_libcouchbase_repo
+    install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
+    install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel
+    alternatives --set python /usr/bin/python2
+    setup_aws_cli
+    setup_gcp_repo
+    install_pkg google-cloud-cli
+    setup_azure_repo
+    install_pkg azure-cli
+    ;;
+  ubuntu)
+    setup_libcouchbase_repo
+    install_pkg libcouchbase3 libcouchbase-dev libcouchbase3-tools libcouchbase-dbg libcouchbase3-libev libcouchbase3-libevent
+    install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev
+    update-alternatives --set python /usr/bin/python2
+    setup_aws_cli
+    setup_gcp_repo
+    install_pkg google-cloud-cli
+    setup_azure_repo
+    install_pkg azure-cli
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
 }
 
 # shellcheck disable=SC2120
@@ -344,6 +506,14 @@ function prep_couchbase {
   disable_thp | log_output
   config_swappiness | log_output
   install_sw_generic | log_output
+}
+
+function prep_sdk {
+  exec 2>&1
+  echo "Starting general host prep." | log_output
+  set_linux_type
+  echo "System type: $LINUXTYPE" | log_output
+  install_sdk_sw
 }
 
 function enable_docker {
