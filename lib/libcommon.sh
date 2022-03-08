@@ -251,6 +251,9 @@ esac
 
 function setup_aws_cli {
     curl -s -o /var/tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    if [ -d /var/tmp/aws ]; then
+      rm -rf /var/tmp/aws
+    fi
     unzip -q /var/tmp/awscliv2.zip -d /var/tmp
     /var/tmp/aws/install
 }
@@ -345,7 +348,7 @@ function install_sdk_sw {
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-dev libcouchbase3-tools libcouchbase-dbg libcouchbase3-libev libcouchbase3-libevent
     install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev
-    update-alternatives --set python /usr/bin/python2
+    update-alternatives --install /usr/bin/python python /usr/bin/python2 1
     setup_aws_cli
     setup_gcp_repo
     install_pkg google-cloud-cli
@@ -510,7 +513,7 @@ function prep_couchbase {
 
 function prep_sdk {
   exec 2>&1
-  echo "Starting general host prep." | log_output
+  echo "Starting SDK host prep." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
   install_sdk_sw
