@@ -210,7 +210,7 @@ function add_user_to_docker_group {
   if getent group docker | grep -q "\b${USER_NAME}\b"; then
     return
   else
-    groupadd -g $GROUP_ID $USER_NAME
+    usermod -a -G $GROUP_ID $USER_NAME
   fi
 }
 
