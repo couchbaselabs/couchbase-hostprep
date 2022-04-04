@@ -198,6 +198,22 @@ function add_admin_user {
   fi
 }
 
+function add_user_to_docker_group {
+  local USER_NAME=$(who am i | awk '{print $1}')
+  local GROUP_ID=$(getent group docker | cut -d: -f3)
+
+  if [ -z "$GROUP_ID" ]; then
+    echo "Docker group does not exist."
+    return
+  fi
+
+  if getent group docker | grep -q "\b${USER_NAME}\b"; then
+    return
+  else
+    groupadd -g $GROUP_ID $USER_NAME
+  fi
+}
+
 function setup_libcouchbase_repo {
 set_linux_type
 case $LINUXTYPE in
@@ -336,22 +352,22 @@ function install_sdk_sw {
   centos)
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
-    install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel
+    install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel kubectl python39 python39-devel
     alternatives --set python /usr/bin/python2
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli
+    install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
     ;;
   ubuntu)
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-dev libcouchbase3-tools libcouchbase-dbg libcouchbase3-libev libcouchbase3-libevent
-    install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev
+    install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev kubectl python3.9 python3.9-dev
     update-alternatives --install /usr/bin/python python /usr/bin/python2 1
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli
+    install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
     ;;
@@ -517,6 +533,9 @@ function prep_sdk {
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
   install_sdk_sw
+  install_sw_generic
+  add_user_to_docker_group
+  enable_docker
 }
 
 function enable_docker {
@@ -525,6 +544,9 @@ function enable_docker {
   centos)
     local PKGNAME="docker"
     local SVCNAME=$PKGNAME
+    ;;
+  ubuntu)
+    return
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"

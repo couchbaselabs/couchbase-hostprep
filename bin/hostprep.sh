@@ -8,16 +8,17 @@ CB_VERSION="7.0.3-7031"
 PKGMGR="yum"
 SVGMGR="systemctl"
 ADMINUSER="admin"
-PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h | -u | -U ]
+PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h | -u | -U | -c ]
              -t Host type
              -v Couchbase version
              -n DNS server
              -d DNS domain
              -h Hostname
              -u Admin username
-             -U Non-root user to pattern"
+             -U Non-root user to pattern
+             -c Call function from library and exit"
 
-while getopts "t:v:n:d:h:u:U:" opt
+while getopts "t:v:n:d:h:u:U:c:" opt
 do
   case $opt in
     t)
@@ -40,6 +41,10 @@ do
       ;;
     U)
       COPYUSER=$OPTARG
+      ;;
+    c)
+      "$OPTARG"
+      exit
       ;;
     \?)
       print_usage
