@@ -346,6 +346,22 @@ EOF
 esac
 }
 
+function install_kops {
+  cd /usr/local/bin || return
+  curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+  [ -f /usr/local/bin/kops ] && chmod +x /usr/local/bin/kops
+}
+
+function create_user_bin_dir {
+  local USER_NAME=$(who am i | awk '{print $1}')
+  local USER_GROUP=$(id -gn $USER_NAME)
+  if [ ! -d /home/${USER_NAME}/bin ]; then
+    mkdir /home/${USER_NAME}/bin
+    git clone -q https://github.com/mminichino/perf-lab-bin /home/${USER_NAME}/bin
+    chown -R ${USER_NAME}:${USER_GROUP} /home/${USER_NAME}/bin
+  fi
+}
+
 function install_sdk_sw {
   set_linux_type
   case $LINUXTYPE in
@@ -359,6 +375,8 @@ function install_sdk_sw {
     install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
+    install_kops
+    create_user_bin_dir
     ;;
   ubuntu)
     setup_libcouchbase_repo
@@ -370,6 +388,8 @@ function install_sdk_sw {
     install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
+    install_kops
+    create_user_bin_dir
     ;;
   *)
     err_exit "Unknown linux type $LINUXTYPE"
