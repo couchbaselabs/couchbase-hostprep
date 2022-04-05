@@ -352,6 +352,12 @@ function install_kops {
   [ -f /usr/local/bin/kops ] && chmod +x /usr/local/bin/kops
 }
 
+function install_kubectl {
+  cd /usr/local/bin || return
+  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  [ -f /usr/local/bin/kubectl ] && chmod +x /usr/local/bin/kubectl
+}
+
 function create_user_bin_dir {
   local USER_NAME=$(who am i | awk '{print $1}')
   local USER_GROUP=$(id -gn $USER_NAME)
@@ -368,7 +374,7 @@ function install_sdk_sw {
   centos)
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
-    install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel kubectl python39 python39-devel
+    install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel python39 python39-devel
     alternatives --set python /usr/bin/python2
     setup_aws_cli
     setup_gcp_repo
@@ -376,12 +382,13 @@ function install_sdk_sw {
     setup_azure_repo
     install_pkg azure-cli
     install_kops
+    install_kubectl
     create_user_bin_dir
     ;;
   ubuntu)
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-dev libcouchbase3-tools libcouchbase-dbg libcouchbase3-libev libcouchbase3-libevent
-    install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev kubectl python3.9 python3.9-dev
+    install_pkg python2 zip python3 maven netcat cmake g++ gcc make libssl-dev python3-dev python3.9 python3.9-dev
     update-alternatives --install /usr/bin/python python /usr/bin/python2 1
     setup_aws_cli
     setup_gcp_repo
@@ -389,6 +396,7 @@ function install_sdk_sw {
     setup_azure_repo
     install_pkg azure-cli
     install_kops
+    install_kubectl
     create_user_bin_dir
     ;;
   *)
