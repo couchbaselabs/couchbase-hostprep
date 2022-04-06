@@ -325,7 +325,7 @@ set_linux_type
 case $LINUXTYPE in
   centos)
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
-cat <<EOF > /etc/yum.repos.d/google-cloud-sdk.repo
+cat <<EOF > /etc/yum.repos.d/azure-sdk.repo
 [azure-cli]
 name=Azure CLI
 baseurl=https://packages.microsoft.com/yumrepos/azure-cli
@@ -358,6 +358,11 @@ function install_kubectl {
   [ -f /usr/local/bin/kubectl ] && chmod +x /usr/local/bin/kubectl
 }
 
+function install_eksctl {
+  curl -s -L "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+  mv /tmp/eksctl /usr/local/bin
+}
+
 function create_user_bin_dir {
   local USER_NAME=$(who am i | awk '{print $1}')
   local USER_GROUP=$(id -gn $USER_NAME)
@@ -378,11 +383,13 @@ function install_sdk_sw {
     alternatives --set python /usr/bin/python2
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
+    install_pkg google-cloud-cli
+    install_pkg google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
     install_kops
     install_kubectl
+    install_eksctl
     create_user_bin_dir
     ;;
   ubuntu)
@@ -392,11 +399,13 @@ function install_sdk_sw {
     update-alternatives --install /usr/bin/python python /usr/bin/python2 1
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli google-cloud-sdk-gke-gcloud-auth-plugin
+    install_pkg google-cloud-cli
+    install_pkg google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
     install_kops
     install_kubectl
+    install_eksctl
     create_user_bin_dir
     ;;
   *)
