@@ -363,6 +363,13 @@ function install_eksctl {
   mv /tmp/eksctl /usr/local/bin
 }
 
+function install_helm {
+  cd /tmp || return
+  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+  chmod 700 /tmp/get_helm.sh
+  /tmp/get_helm.sh
+}
+
 function create_user_bin_dir {
   local USER_NAME=$(who am i | awk '{print $1}')
   local USER_GROUP=$(id -gn $USER_NAME)
@@ -390,6 +397,7 @@ function install_sdk_sw {
     install_kops
     install_kubectl
     install_eksctl
+    install_helm
     create_user_bin_dir
     ;;
   ubuntu)
@@ -406,6 +414,7 @@ function install_sdk_sw {
     install_kops
     install_kubectl
     install_eksctl
+    install_helm
     create_user_bin_dir
     ;;
   *)
