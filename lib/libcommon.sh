@@ -383,7 +383,7 @@ function install_sdk_sw {
     alternatives --set python /usr/bin/python2
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli
+    install_pkg google-cloud-sdk
     install_pkg google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
@@ -399,7 +399,7 @@ function install_sdk_sw {
     update-alternatives --install /usr/bin/python python /usr/bin/python2 1
     setup_aws_cli
     setup_gcp_repo
-    install_pkg google-cloud-cli
+    install_pkg google-cloud-sdk
     install_pkg google-cloud-sdk-gke-gcloud-auth-plugin
     setup_azure_repo
     install_pkg azure-cli
