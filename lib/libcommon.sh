@@ -130,7 +130,7 @@ fi
 add_to_sysctl "$1" "$2" /etc/sysctl.conf
 }
 
-backup_sysctl {
+backup_sysctl() {
   cp -p /etc/sysctl.conf /etc/sysctl.conf.$(date "+%m%d%y%H%M%S")
 }
 
