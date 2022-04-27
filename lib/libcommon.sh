@@ -70,11 +70,11 @@ function install_pkg {
   set_linux_type
   case $PKGMGR in
   yum)
-    yum install -q -y $@
+    yum install -q -y "$@"
     ;;
   apt)
     apt-get update
-    apt-get install -q -y $@
+    apt-get install -q -y "$@"
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -86,10 +86,10 @@ function install_pkg_file {
   set_linux_type
   case $PKGMGR in
   yum)
-    rpm -i $@
+    rpm -i "$@"
     ;;
   apt)
-    dpkg -i $@
+    dpkg -i "$@"
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
@@ -101,12 +101,47 @@ function service_control {
   set_linux_type
   case $SVCMGR in
   systemctl)
-    systemctl $@
+    systemctl "$@"
     ;;
   *)
     err_exit "Unknown service manager $SVCMGR"
     ;;
   esac
+}
+
+text_in_file() {
+grep -q "$1" "$2"
+}
+
+remove_from_file() {
+sed -i "/^$1/d" "$2"
+}
+
+add_to_sysctl() {
+local value=$(echo "$2" | sed "s/:/ /g")
+echo "$1 = $value" >> "$3"
+}
+
+update_sysctl() {
+if text_in_file "$1" sysctl.conf
+then
+  remove_from_file "$1" sysctl.conf
+fi
+add_to_sysctl "$1" "$2" sysctl.conf
+}
+
+net_tuning() {
+  update_sysctl net.ipv4.tcp_wmem 8192:65536:33554432
+  update_sysctl net.ipv4.tcp_rmem 8192:65536:33554432
+  update_sysctl net.core.rmem_default 33554432
+  update_sysctl net.core.rmem_max 33554432
+  update_sysctl net.core.wmem_default 33554432
+  update_sysctl net.core.wmem_max 33554432
+  update_sysctl net.core.somaxconn 65535
+  update_sysctl net.core.netdev_max_backlog 65536
+  update_sysctl net.core.optmem_max 25165824
+  update_sysctl net.ipv4.tcp_mem 786432:1048576:26777216
+  update_sysctl net.ipv4.udp_mem 65536:131072:262144
 }
 
 function nm_check {
@@ -560,17 +595,19 @@ function prep_generic {
   disable_thp | log_output
   config_swappiness | log_output
   install_sw_generic | log_output
+  net_tuning | log_output
 }
 
 function prep_couchbase {
   exec 2>&1
-  echo "Starting general host prep." | log_output
+  echo "Starting Couchbase host prep." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
   add_admin_user | log_output
   disable_thp | log_output
   config_swappiness | log_output
   install_sw_generic | log_output
+  net_tuning | log_output
 }
 
 function prep_sdk {
@@ -578,10 +615,11 @@ function prep_sdk {
   echo "Starting SDK host prep." | log_output
   set_linux_type
   echo "System type: $LINUXTYPE" | log_output
-  install_sdk_sw
-  install_sw_generic
-  add_user_to_docker_group
-  enable_docker
+  install_sdk_sw | log_output
+  install_sw_generic | log_output
+  add_user_to_docker_group | log_output
+  enable_docker | log_output
+  net_tuning | log_output
 }
 
 function enable_docker {
