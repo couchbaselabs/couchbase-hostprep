@@ -123,14 +123,19 @@ echo "$1 = $value" >> "$3"
 }
 
 update_sysctl() {
-if text_in_file "$1" sysctl.conf
+if text_in_file "$1" /etc/sysctl.conf
 then
-  remove_from_file "$1" sysctl.conf
+  remove_from_file "$1" /etc/sysctl.conf
 fi
-add_to_sysctl "$1" "$2" sysctl.conf
+add_to_sysctl "$1" "$2" /etc/sysctl.conf
+}
+
+backup_sysctl {
+  cp -p /etc/sysctl.conf /etc/sysctl.conf.$(date "+%m%d%y%H%M%S")
 }
 
 net_tuning() {
+  backup_sysctl
   update_sysctl net.ipv4.tcp_wmem 8192:65536:33554432
   update_sysctl net.ipv4.tcp_rmem 8192:65536:33554432
   update_sysctl net.core.rmem_default 33554432
