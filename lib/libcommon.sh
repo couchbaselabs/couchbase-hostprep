@@ -74,7 +74,7 @@ function install_pkg {
     ;;
   apt)
     apt-get update
-    apt-get install -q -y --force-yes "$@"
+    apt-get install -q -y -o Dpkg::Options::="--force-overwrite" "$@"
     ;;
   *)
     err_exit "Unknown package manager $PKGMGR"
