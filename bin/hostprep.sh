@@ -5,6 +5,7 @@ PKGDIR=$(dirname $SCRIPTDIR)
 source $PKGDIR/lib/libcommon.sh
 TYPE="generic"
 CB_VERSION="7.0.3-7031"
+SGW_VERSION="3.0.0"
 PKGMGR="yum"
 SVGMGR="systemctl"
 ADMINUSER="admin"
@@ -18,7 +19,7 @@ PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h | -u | -U | -c ]
              -U Non-root user to pattern
              -c Call function from library and exit"
 
-while getopts "t:v:n:d:h:u:U:c:" opt
+while getopts "t:v:n:d:h:u:U:c:g:" opt
 do
   case $opt in
     t)
@@ -26,6 +27,9 @@ do
       ;;
     v)
       CB_VERSION=$OPTARG
+      ;;
+    g)
+      SGW_VERSION=$OPTARG
       ;;
     n)
       NAMESERVER=$OPTARG
@@ -79,6 +83,12 @@ case $TYPE in
     ;;
   sdk)
     prep_sdk
+    enable_chrony
+    ;;
+  sgw)
+    prep_sgw
+    disable_firewall
+    enable_chrony
     ;;
   basic)
     prep_basic

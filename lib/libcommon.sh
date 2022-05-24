@@ -588,6 +588,25 @@ cat <<EOF > /etc/security/limits.d/91-couchbase.conf
 EOF
 }
 
+install_sw_sgw() {
+  set_linux_type
+  case $LINUXTYPE in
+  centos)
+    SGW_PKG=couchbase-sync-gateway-enterprise_${SGW_VERSION}_x86_64.rpm
+    curl -s -o /var/tmp/${SGW_PKG} http://packages.couchbase.com/releases/couchbase-sync-gateway/${SGW_VERSION}/${SGW_PKG}
+    install_pkg_file /var/tmp/${SGW_PKG}
+    ;;
+  ubuntu)
+    SGW_PKG=couchbase-sync-gateway-enterprise_${SGW_VERSION}_x86_64.deb
+    curl -s -o /var/tmp/${SGW_PKG} http://packages.couchbase.com/releases/couchbase-sync-gateway/${SGW_VERSION}/${SGW_PKG}
+    install_pkg_file /var/tmp/${SGW_PKG}
+    ;;
+  *)
+    err_exit "Unknown linux type $LINUXTYPE"
+    ;;
+  esac
+}
+
 function prep_generic {
   exec 2>&1
   echo "Starting general host prep." | log_output
@@ -625,6 +644,14 @@ function prep_sdk {
   add_user_to_docker_group | log_output
   enable_docker | log_output
   net_tuning | log_output
+}
+
+prep_sgw() {
+  exec 2>&1
+  echo "Starting Sync Gateway host prep." | log_output
+  set_linux_type
+  echo "System type: $LINUXTYPE" | log_output
+  install_sw_sgw | log_output
 }
 
 function enable_docker {
