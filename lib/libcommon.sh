@@ -725,8 +725,12 @@ cat << EOF > /home/sync_gateway/sync_gateway.json
         }
       },
     "info": {
-      "enabled": false
-    },
+      "enabled": true,
+      "rotation": {
+        "max_size": 20,
+        "max_age": 90
+        }
+      },
     "debug": {
       "enabled": false
       }
