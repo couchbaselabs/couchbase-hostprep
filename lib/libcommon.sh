@@ -699,7 +699,7 @@ cat << EOF > /home/sync_gateway/sync_gateway.json
    "use_tls_server": true
   },
   "logging": {
-    "log_file_path": "/home/sync_gateway/sgw.log",
+    "log_file_path": "/home/sync_gateway/logs",
     "redaction_level": "partial",
     "console": {
       "log_level": "debug",
