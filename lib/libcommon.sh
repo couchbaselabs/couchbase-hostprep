@@ -681,6 +681,65 @@ function cb_install {
   install_sw_couchbase | log_output
 }
 
+sgw_setup() {
+if [ -z "$RALLY_NODE" ]; then
+  return
+fi
+
+service_control enable sync_gateway
+
+cat << EOF > /home/sync_gateway/sync_gateway.json
+{
+  "bootstrap": {
+   "group_id": "group1",
+   "server": "couchbases://${RALLY_NODE}",
+   "username": "$USERNAME",
+   "password": "$PASSWORD",
+   "server_tls_skip_verify": true,
+   "use_tls_server": true
+  },
+  "logging": {
+    "log_file_path": "/home/sync_gateway/sgw.log",
+    "redaction_level": "partial",
+    "console": {
+      "log_level": "debug",
+      "log_keys": ["*"]
+      },
+    "error": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 20,
+        "max_age": 180
+        }
+      },
+    "warn": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 20,
+        "max_age": 90
+        }
+      },
+    "info": {
+      "enabled": false
+    },
+    "debug": {
+      "enabled": false
+      }
+  }
+}
+EOF
+
+service_control stop sync_gateway
+service_control start sync_gateway
+
+service_control status couchbase-server >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+  service_control stop couchbase-server
+  service_control disable couchbase-server
+fi
+
+}
+
 function disable_firewall {
   set_linux_type
   case $LINUXTYPE in

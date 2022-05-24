@@ -86,6 +86,9 @@ case $MODE in
   write)
     cb_write_node_config
     ;;
+  sgw)
+    sgw_setup
+    ;;
   debug)
     cb_init_debug
     ;;

@@ -82,10 +82,12 @@ case $TYPE in
     enable_chrony
     ;;
   sdk)
+    prep_generic
     prep_sdk
     enable_chrony
     ;;
   sgw)
+    prep_generic
     prep_sgw
     disable_firewall
     enable_chrony
