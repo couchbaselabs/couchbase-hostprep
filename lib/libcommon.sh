@@ -688,6 +688,11 @@ fi
 
 service_control enable sync_gateway
 
+if [ ! -d /home/sync_gateway/logs ]; then
+  mkdir /home/sync_gateway/logs
+  chown sync_gateway:sync_gateway /home/sync_gateway/logs
+fi
+
 cat << EOF > /home/sync_gateway/sync_gateway.json
 {
   "bootstrap": {
