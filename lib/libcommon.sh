@@ -682,6 +682,8 @@ function cb_install {
 }
 
 sgw_setup() {
+local do_bootstrap=0
+
 if [ -z "$RALLY_NODE" ]; then
   return
 fi
@@ -693,6 +695,15 @@ if [ ! -d /home/sync_gateway/logs ]; then
   chown sync_gateway:sync_gateway /home/sync_gateway/logs
 fi
 
+major_rev=$(/opt/couchbase-sync-gateway/bin/sync_gateway -help 2>&1 | head -1 | sed -n -e 's/^.*\([0-9]\)\.[0-9]\.[0-9].*$/\1/p')
+
+if [ -n "$major_rev" ] && [ "$major_rev" -eq "$major_rev" ] 2>/dev/null; then
+  if [ "$major_rev" -ge 3 ]; then
+    do_bootstrap=1
+  fi
+fi
+
+if [ "$do_bootstrap" -eq 1 ]; then
 cat << EOF > /home/sync_gateway/sync_gateway.json
 {
   "bootstrap": {
@@ -737,6 +748,58 @@ cat << EOF > /home/sync_gateway/sync_gateway.json
   }
 }
 EOF
+else
+cat << EOF > /home/sync_gateway/sync_gateway.json
+{
+  "databases": {
+    "db": {
+      "server": "couchbases://${RALLY_NODE}",
+      "bucket": "default",
+      "username": "$USERNAME",
+      "password": "$PASSWORD",
+      "users": { "GUEST": { "disabled": false, "admin_channels": ["*"] } },
+      "enable_shared_bucket_access": true,
+      "delta_sync": {
+        "enabled": true,
+        "rev_max_age_seconds": 86400
+      }
+    }
+  },
+  "logging": {
+  "log_file_path": "/home/sync_gateway/logs",
+  "redaction_level": "partial",
+  "console": {
+    "log_level": "debug",
+    "log_keys": ["*"]
+    },
+  "error": {
+    "enabled": true,
+    "rotation": {
+      "max_size": 20,
+      "max_age": 180
+      }
+    },
+  "warn": {
+    "enabled": true,
+    "rotation": {
+      "max_size": 20,
+      "max_age": 90
+      }
+    },
+  "info": {
+    "enabled": true,
+    "rotation": {
+      "max_size": 20,
+      "max_age": 90
+      }
+    },
+  "debug": {
+    "enabled": false
+    }
+  }
+}
+EOF
+fi
 
 service_control stop sync_gateway
 service_control start sync_gateway
