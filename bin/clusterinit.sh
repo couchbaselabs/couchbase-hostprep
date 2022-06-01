@@ -17,14 +17,17 @@ DATAPATH=/opt/couchbase/var/lib/couchbase/data
 INDEXPATH=/opt/couchbase/var/lib/couchbase/data
 ANALYTICSPATH=/opt/couchbase/var/lib/couchbase/data
 EVENTINGPATH=/opt/couchbase/var/lib/couchbase/data
-PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r | -g
+PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r | -g | -u | -p | -n
              -m Mode
              -i Internal node IP
              -e External node IP
              -s Services
              -o Cluster index memory storage option
              -g Server group name
-             -r Rally node for init"
+             -r Rally node for init
+             -u Couchbase administrator user name
+             -p Couchbase administrator password
+             -n Couchbase cluster name"
 
 while getopts "m:i:e:s:o:r:u:p:n:g:" opt
 do
