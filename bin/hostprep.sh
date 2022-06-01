@@ -9,9 +9,10 @@ SGW_VERSION="3.0.0"
 PKGMGR="yum"
 SVGMGR="systemctl"
 ADMINUSER="admin"
-PRINT_USAGE="Usage: $0 -t [ -v | -n | -d | -h | -u | -U | -c ]
+PRINT_USAGE="Usage: $0 -t [ -v | -g | -n | -d | -h | -u | -U | -c ]
              -t Host type
              -v Couchbase version
+             -g Sync Gateway version
              -n DNS server
              -d DNS domain
              -h Hostname
