@@ -1,6 +1,13 @@
 #!/bin/bash
 #
 
+err_exit() {
+   if [ -n "$1" ]; then
+      echo "[!] Error: $1"
+   fi
+   exit 1
+}
+
 source /etc/os-release
 echo "Bootstrap linux type $ID"
 case ${ID:-null} in
