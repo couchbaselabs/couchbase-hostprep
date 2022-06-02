@@ -5,6 +5,13 @@ sgw_version="3.0.0"
 test_bootstrap=0
 hostprep_opts=""
 
+err_exit() {
+   if [ -n "$1" ]; then
+      echo "[!] Error: $1"
+   fi
+   exit 1
+}
+
 while getopts "bt:" opt
 do
   case $opt in
@@ -43,6 +50,12 @@ if [ "$test_bootstrap" -eq 1 ]; then
 fi
 
 echo "Testing repo pull"
+
+if [ -d /usr/local/hostprep ]; then
+  echo -n "Removing existing hostprep installation ... "
+  sudo rm -rf /usr/local/hostprep || err_exit "can not remove existing installation."
+  echo "Done."
+fi
 
 sudo git clone https://github.com/${host_prep_repo} /usr/local/hostprep
 
