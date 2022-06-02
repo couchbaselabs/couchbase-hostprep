@@ -20,7 +20,7 @@ PRINT_USAGE="Usage: $0 -t [ -v | -g | -n | -d | -h | -u | -U | -c ]
              -U Non-root user to pattern
              -c Call function from library and exit"
 
-while getopts "t:v:n:d:h:u:U:c:g:" opt
+while getopts "t:v:n:d:h:u:U:c:g:p:" opt
 do
   case $opt in
     t)
@@ -46,6 +46,9 @@ do
       ;;
     U)
       COPYUSER=$OPTARG
+      ;;
+    p)
+      export LINUXTYPE=$OPTARG
       ;;
     c)
       "$OPTARG"

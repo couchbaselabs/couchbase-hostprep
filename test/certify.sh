@@ -3,12 +3,16 @@
 host_prep_repo="mminichino/hostprep"
 sgw_version="3.0.0"
 test_bootstrap=0
+hostprep_opts=""
 
-while getopts "b" opt
+while getopts "bt:" opt
 do
   case $opt in
     b)
       test_bootstrap=1
+      ;;
+    t)
+      hostprep_opts="$hostprep_opts -p $OPTARG"
       ;;
     \?)
       echo "Usage: $0 [ -b ]"
@@ -51,7 +55,7 @@ echo "Done."
 
 echo "Testing Couchbase prep"
 
-sudo /usr/local/hostprep/bin/hostprep.sh -t couchbase -v ${cb_version}
+sudo /usr/local/hostprep/bin/hostprep.sh -t couchbase -v ${cb_version} $hostprep_opts
 
 if [ $? -ne 0 ]; then
   echo "Problem encountered, stopping test."
@@ -62,7 +66,7 @@ echo "Done."
 
 echo "Testing Sync Gateway pull"
 
-sudo /usr/local/hostprep/bin/hostprep.sh -t sgw -g ${sgw_version}
+sudo /usr/local/hostprep/bin/hostprep.sh -t sgw -g ${sgw_version} $hostprep_opts
 
 if [ $? -ne 0 ]; then
   echo "Problem encountered, stopping test."
