@@ -2,6 +2,21 @@
 #
 host_prep_repo="mminichino/hostprep"
 sgw_version="3.0.0"
+test_bootstrap=0
+
+while getopts "b" opt
+do
+  case $opt in
+    b)
+      test_bootstrap=1
+      ;;
+    \?)
+      echo "Usage: $0 [ -b ]"
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
 
 which yum >/dev/null 2>&1
 if [ $? -eq 0 ]; then
@@ -10,16 +25,18 @@ else
   cb_version="7.1.0-2556-1"
 fi
 
-echo "Testing bootstrap"
+if [ "$test_bootstrap" -eq 1 ]; then
+  echo "Testing bootstrap"
 
-curl -sfL https://raw.githubusercontent.com/${host_prep_repo}/main/bin/bootstrap.sh | sudo -E bash -
+  curl -sfL https://raw.githubusercontent.com/${host_prep_repo}/main/bin/bootstrap.sh | sudo -E bash -
 
-if [ $? -ne 0 ]; then
-  echo "Problem encountered, stopping test."
-  exit 1
+  if [ $? -ne 0 ]; then
+    echo "Problem encountered, stopping test."
+    exit 1
+  fi
+
+  echo "Done."
 fi
-
-echo "Done."
 
 echo "Testing repo pull"
 
