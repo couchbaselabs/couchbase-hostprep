@@ -11,7 +11,7 @@ err_exit() {
 source /etc/os-release
 echo "Bootstrap linux type $ID"
 case ${ID:-null} in
-centos)
+centos|rhel)
   yum install -q -y git
   ;;
 ubuntu)
