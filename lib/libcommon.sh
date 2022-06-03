@@ -222,7 +222,10 @@ function add_admin_user {
     useradd -m -u $MYUID -g $ADMINUSER $ADMINUSER
   fi
 
-  usermod -a -G $DEFAULT_ADMIN_GROUP $ADMINUSER
+  if [ -n "$DEFAULT_ADMIN_GROUP" ]; then
+    usermod -a -G $DEFAULT_ADMIN_GROUP $ADMINUSER
+  fi
+
   echo "${ADMINUSER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${ADMINUSER}
   chmod 440 /etc/sudoers.d/${ADMINUSER}
   [ ! -d /home/${ADMINUSER}/.ssh ] && mkdir /home/${ADMINUSER}/.ssh
