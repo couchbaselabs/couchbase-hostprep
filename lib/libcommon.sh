@@ -158,7 +158,7 @@ net_tuning() {
 function nm_check {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     local PKGNAME="NetworkManager"
     local SVCNAME=$PKGNAME
     ;;
@@ -281,7 +281,7 @@ function setup_epel_repo {
 function setup_libcouchbase_repo {
 set_linux_type
 case $LINUXTYPE in
-centos)
+centos|rhel)
   case $LINUX_VERSION in
   7)
 cat <<EOF > /etc/yum.repos.d/couchbase.repo
@@ -304,7 +304,7 @@ gpgkey = https://packages.couchbase.com/clients/c/repos/rpm/couchbase.key
 EOF
     ;;
   *)
-    err_exit "Unsupported CentOS version: $LINUX_VERSION"
+    err_exit "setup_libcouchbase_repo: unsupported linux version: $LINUXTYPE $LINUX_VERSION"
     ;;
   esac
   ;;
@@ -341,7 +341,7 @@ function setup_aws_cli {
 function setup_gcp_repo {
 set_linux_type
 case $LINUXTYPE in
-  centos)
+  centos|rhel)
   case $LINUX_VERSION in
     7)
 cat <<EOF > /etc/yum.repos.d/google-cloud-sdk.repo
@@ -368,7 +368,7 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
 EOF
     ;;
     *)
-      err_exit "Unsupported CentOS version: $LINUX_VERSION"
+      err_exit "setup_gcp_repo: unsupported linux version: $LINUXTYPE $LINUX_VERSION"
     ;;
   esac
   ;;
@@ -387,7 +387,7 @@ esac
 function setup_azure_repo {
 set_linux_type
 case $LINUXTYPE in
-  centos)
+  centos|rhel)
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
 cat <<EOF > /etc/yum.repos.d/azure-sdk.repo
 [azure-cli]
@@ -447,7 +447,7 @@ function create_user_bin_dir {
 function install_sdk_sw {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     setup_libcouchbase_repo
     install_pkg libcouchbase3 libcouchbase-devel libcouchbase3-tools
     install_pkg python2 zip python3 maven nc cmake gcc-c++ gcc make openssl-devel python3-devel python39 python39-devel
@@ -521,7 +521,7 @@ EOF
 
 chmod 755 /etc/init.d/disable-thp
 case $LINUXTYPE in
-centos)
+centos|rhel)
   chkconfig --add disable-thp
   ;;
 ubuntu)
@@ -589,7 +589,7 @@ function install_sw_generic {
 function install_sw_couchbase {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     curl -s -o /var/tmp/couchbase-release-1.0-x86_64.rpm https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-x86_64.rpm
     install_pkg_file /var/tmp/couchbase-release-1.0-x86_64.rpm
     install_pkg couchbase-server-${CB_VERSION}
@@ -615,7 +615,7 @@ EOF
 install_sw_sgw() {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     SGW_PKG=couchbase-sync-gateway-enterprise_${SGW_VERSION}_x86_64.rpm
     curl -s -o /var/tmp/${SGW_PKG} http://packages.couchbase.com/releases/couchbase-sync-gateway/${SGW_VERSION}/${SGW_PKG}
     install_pkg_file /var/tmp/${SGW_PKG}
@@ -681,7 +681,7 @@ prep_sgw() {
 function enable_docker {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     local PKGNAME="docker"
     local SVCNAME=$PKGNAME
     ;;
@@ -839,7 +839,7 @@ fi
 function disable_firewall {
   set_linux_type
   case $LINUXTYPE in
-  centos)
+  centos|rhel)
     systemctl status firewalld >/dev/null 2>&1
     if [ $? -eq 0 ]; then
       service_control stop firewalld
@@ -859,7 +859,7 @@ function enable_chrony {
   if [ -z "$(ps -ef |grep ntpd |grep -v grep)" -a -z "$(ps -ef |grep chronyd |grep -v grep)" ]; then
     set_linux_type
     case $LINUXTYPE in
-    centos)
+    centos|rhel)
       install_pkg chrony
       service_control enable chronyd
       service_control start chronyd
