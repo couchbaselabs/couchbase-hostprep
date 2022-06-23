@@ -46,7 +46,7 @@ function set_linux_type {
   if [ -z "$LINUXTYPE" ]; then
     source /etc/os-release
     export LINUXTYPE=$ID
-    case $ID in
+    case $LINUXTYPE in
     centos)
       PKGMGR="yum"
       SVCMGR="systemctl"
