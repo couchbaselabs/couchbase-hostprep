@@ -560,7 +560,7 @@ function install_sw_generic {
   centos|rhel)
     setup_epel_repo
     install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    yum-config-manager --add-repo https://download.docker.com/linux/${LINUXTYPE}/docker-ce.repo
     install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
     ;;
