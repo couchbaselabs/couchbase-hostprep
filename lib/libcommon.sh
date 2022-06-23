@@ -53,6 +53,12 @@ function set_linux_type {
       DEFAULT_ADMIN_GROUP="wheel"
       LINUX_VERSION=$VERSION_ID
       ;;
+    rhel)
+      PKGMGR="yum"
+      SVCMGR="systemctl"
+      DEFAULT_ADMIN_GROUP="adm"
+      LINUX_VERSION=$(echo $VERSION_ID | cut -d. -f1)
+      ;;
     ubuntu)
       PKGMGR="apt"
       SVCMGR="systemctl"
@@ -255,6 +261,21 @@ function add_user_to_docker_group {
   else
     usermod -a -G $GROUP_ID $USER_NAME
   fi
+}
+
+function setup_epel_repo {
+  set_linux_type
+  case $LINUXTYPE in
+  centos)
+    install_pkg epel-release
+    ;;
+  rhel)
+    install_pkg https://dl.fedoraproject.org/pub/epel/epel-release-latest-${LINUX_VERSION}.noarch.rpm
+    ;;
+  *)
+    err_exit "Unsupported epel linux: $LINUXTYPE"
+    ;;
+  esac
 }
 
 function setup_libcouchbase_repo {
@@ -537,7 +558,7 @@ function install_sw_generic {
   set_linux_type
   case $LINUXTYPE in
   centos)
-    install_pkg epel-release
+    setup_epel_repo
     install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     install_pkg docker-ce docker-ce-cli containerd.io
