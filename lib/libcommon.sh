@@ -738,6 +738,9 @@ cat << EOF > /home/sync_gateway/sync_gateway.json
    "server_tls_skip_verify": true,
    "use_tls_server": true
   },
+  "api": {
+    "admin_interface": ":4985"
+  },
   "logging": {
     "log_file_path": "/home/sync_gateway/logs",
     "redaction_level": "partial",
