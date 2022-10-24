@@ -559,13 +559,13 @@ function install_sw_generic {
   case $LINUXTYPE in
   centos|rhel)
     setup_epel_repo
-    install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced xmlstarlet java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
+    install_pkg bzip2 jq git python3 python3-pip python3-devel wget vim-enhanced java-1.8.0-openjdk maven nc sysstat yum-utils bind-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     install_pkg docker-ce docker-ce-cli containerd.io
     usermod -a -G docker $ADMINUSER
     ;;
   ubuntu)
-    install_pkg bzip2 jq git python3 python3-pip python3-dev wget vim xmlstarlet openjdk-8-jdk maven netcat sysstat apt-utils ca-certificates curl gnupg lsb-release net-tools
+    install_pkg bzip2 jq git python3 python3-pip python3-dev wget vim openjdk-8-jdk maven netcat sysstat apt-utils ca-certificates curl gnupg lsb-release net-tools
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
       | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
