@@ -549,9 +549,10 @@ fi
 }
 
 function config_swappiness {
-echo "Configuring swappiness."
-echo "vm.swappiness = 0" >> /etc/sysctl.conf
-echo 0 > /proc/sys/vm/swappiness
+  value=${1:-0}
+  echo "Configuring swappiness as $value."
+  echo "vm.swappiness = $value" >> /etc/sysctl.conf
+  echo $value > /proc/sys/vm/swappiness
 }
 
 function install_sw_generic {
