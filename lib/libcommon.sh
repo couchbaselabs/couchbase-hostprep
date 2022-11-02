@@ -555,6 +555,17 @@ function config_swappiness {
   echo $value > /proc/sys/vm/swappiness
 }
 
+function find_swap_device {
+  for device in /dev/nvme1n1 /dev/xvdb /dev/sdb
+  do
+    lsblk $device > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      echo $device
+      return
+    fi
+  done
+}
+
 function install_sw_generic {
   set_linux_type
   case $LINUXTYPE in
