@@ -37,6 +37,11 @@ shift $((OPTIND -1))
 
 if [ $CONFIGURE -eq 1 ]; then
   if [ -n "$SWAP_DEVICE" ]; then
+    lsblk $SWAP_DEVICE > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "Device $SWAP_DEVICE not found, attempting to locate alternative"
+      SWAP_DEVICE=$(find_swap_device)
+    fi
     SWAP_ON=$SWAP_DEVICE
   else
     if [ -n "$FILE_SIZE" ]; then
