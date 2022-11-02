@@ -17,7 +17,7 @@ while getopts "o:f:d:" opt
 do
   case $opt in
     o)
-      if ["$OPTARG" = "true" ]; then
+      if [ "$OPTARG" = "true" ]; then
         CONFIGURE=1
       fi
       ;;
