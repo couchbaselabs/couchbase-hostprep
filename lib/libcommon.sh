@@ -557,10 +557,21 @@ function config_swappiness {
 
 function check_device {
   local device=${1:-/dev/sdb}
+
+  echo "Checking swap device $device" | log_output
+  lsblk 2>&1 | log_output
+  mount 2>&1 | log_output
+
   lsblk $device > /dev/null 2>&1
-  [ $? -ne 0 ] && return 1
+  if [ $? -ne 0 ]; then
+    echo "check_device: error: lsblk $device failed" | log_output
+    return 1
+  fi
   mount | awk '{print $1}' | grep ^${device} > /dev/null 2>&1
-  [ $? -eq 0 ] && return 1
+  if [ $? -eq 0 ]; then
+    echo "check_device: error: $device mount found" | log_output
+    return 1
+  fi
   return 0
 }
 
