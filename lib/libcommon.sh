@@ -576,13 +576,19 @@ function check_device {
 }
 
 function find_swap_device {
-  for device in /dev/nvme1n1 /dev/xvdb /dev/sdb /dev/sdc
+  local n=0
+  until [ "$n" -ge 10 ]
   do
-    check_device $device
-    if [ $? -eq 0 ]; then
-      echo $device
-      return
-    fi
+    for device in /dev/nvme1n1 /dev/xvdb /dev/xvdc /dev/sdb /dev/sdc
+    do
+      check_device $device
+      if [ $? -eq 0 ]; then
+        echo $device
+        return
+      fi
+    done
+  n=$((n+1))
+  sleep 2
   done
 }
 
