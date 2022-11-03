@@ -555,10 +555,19 @@ function config_swappiness {
   echo $value > /proc/sys/vm/swappiness
 }
 
+function check_device {
+  local device=${1:-/dev/sdb}
+  lsblk $device > /dev/null 2>&1
+  [ $? -ne 0 ] && return 1
+  mount | awk '{print $1}' | grep ^${device} > /dev/null 2>&1
+  [ $? -eq 0 ] && return 1
+  return 0
+}
+
 function find_swap_device {
-  for device in /dev/nvme1n1 /dev/xvdb /dev/sdb
+  for device in /dev/nvme1n1 /dev/xvdb /dev/sdb /dev/sdc
   do
-    lsblk $device > /dev/null 2>&1
+    check_device $device
     if [ $? -eq 0 ]; then
       echo $device
       return
