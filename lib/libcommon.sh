@@ -35,7 +35,7 @@ function log_output {
     while read line; do
         [ -z "$line" ] && continue
         if [ "$NOLOG" -eq 0 -a -n "$LOGFILE" ]; then
-           echo "$DATE: $line" >> $LOGFILE
+           echo "$DATE: $line" | tee -a $LOGFILE
         else
            echo "$DATE: $line"
         fi
