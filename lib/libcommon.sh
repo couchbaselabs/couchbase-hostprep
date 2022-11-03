@@ -583,13 +583,13 @@ function find_swap_device {
     rescan_devices > /dev/null 2>&1
     for device in /dev/nvme1n1 /dev/xvdb /dev/xvdc /dev/sdb /dev/sdc
     do
-      check_device $device
+      check_device $device > /dev/null 2>&1
       if [ $? -eq 0 ]; then
         echo $device
         return
       fi
     done
-  sleep 5
+    sleep 5
   done
 }
 
