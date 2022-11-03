@@ -577,7 +577,7 @@ function check_device {
 
 function find_swap_device {
   local n=0
-  until [ "$n" -gt 12 ]
+  until [ "$n" -gt 20 ]
   do
   n=$((n+1))
     for device in /dev/nvme1n1 /dev/xvdb /dev/xvdc /dev/sdb /dev/sdc
