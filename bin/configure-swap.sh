@@ -7,13 +7,17 @@ CONFIGURE=0
 FILE_SIZE=0
 SWAP_DEVICE=""
 SWAP_ON=""
+WRITE_MODE=0
+READ_MODE=0
 
 PRINT_USAGE="Usage: $0 [ options ]
              -o Configure swap true/false
+             -w Write config file
+             -r Read config file
              -f Swap file size
              -d Swap device"
 
-while getopts "o:f:d:" opt
+while getopts "o:f:d:wr" opt
 do
   case $opt in
     o)
@@ -27,6 +31,12 @@ do
     d)
       SWAP_DEVICE=$OPTARG
       ;;
+    w)
+      WRITE_MODE=1
+      ;;
+    r)
+      READ_MODE=1
+      ;;
     \?)
       print_usage
       exit 1
@@ -34,6 +44,20 @@ do
   esac
 done
 shift $((OPTIND -1))
+
+if [ "$WRITE_MODE" -eq 1 ]; then
+  echo "${CONFIGURE}:${SWAP_DEVICE}" > /etc/swap-dev.conf
+  exit
+fi
+
+if [ "$READ_MODE" -eq 1 ]; then
+  if [ ! -f /etc/swap-dev.conf ]; then
+    echo "Config file /etc/swap-dev.conf not found"
+    exit
+  fi
+  CONFIGURE=$(cat /etc/swap-dev.conf | cut -f1 -d:)
+  SWAP_DEVICE=$(cat /etc/swap-dev.conf | cut -f2 -d:)
+fi
 
 if [ $CONFIGURE -eq 1 ]; then
   if [ -n "$SWAP_DEVICE" ]; then
