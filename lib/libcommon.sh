@@ -579,7 +579,8 @@ function find_swap_device {
   local n=0
   until [ "$n" -gt 20 ]
   do
-  n=$((n+1))
+    n=$((n+1))
+    rescan_devices > /dev/null 2>&1
     for device in /dev/nvme1n1 /dev/xvdb /dev/xvdc /dev/sdb /dev/sdc
     do
       check_device $device
@@ -589,6 +590,14 @@ function find_swap_device {
       fi
     done
   sleep 5
+  done
+}
+
+function rescan_devices {
+  for host in $(ls /sys/class/scsi_host)
+  do
+    SCSI_HOST_PATH=/sys/class/scsi_host/${host}/scan
+    echo "- - -" > $SCSI_HOST_PATH
   done
 }
 
