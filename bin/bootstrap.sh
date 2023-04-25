@@ -41,6 +41,7 @@ do
   then
     break
   else
+    [ "$i" -eq 5 ] && err_exit "Unsuccessful. Retries exceeded."
     echo "Unsuccessful on $(date)" >> /var/tmp/hostprep_bootstrap.log
     sleep 15
   fi
