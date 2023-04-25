@@ -39,12 +39,13 @@ do
   echo "Bootstrap attempt $i on $(date)" >> /var/tmp/hostprep_bootstrap.log
   if do_bootstrap
   then
-    echo "Bootstrap successful."
     break
   else
     echo "Unsuccessful on $(date)" >> /var/tmp/hostprep_bootstrap.log
     sleep 15
   fi
 done
+
+echo "Bootstrap successful."
 
 ## end
