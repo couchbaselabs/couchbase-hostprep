@@ -27,7 +27,7 @@ install_python() {
     ;;
   ubuntu|debian)
     apt-get update
-    apt-get install -q -y python3
+    apt-get install -q -y python3 python3-venv
     ;;
   opensuse-leap|sles)
     zypper install -y python3
@@ -59,7 +59,7 @@ done
 
 cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
 
-if ! which "$PYTHON_BIN" >/dev/null 2>&1
+if ! which "$PYTHON_BIN" >/dev/null 2>&1 || ! "$PYTHON_BIN" -m ensurepip >/dev/null 2>&1
 then
   printf "Installing Python 3..."
   if ! install_python >> $SETUP_LOG 2>&1
