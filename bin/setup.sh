@@ -17,6 +17,45 @@ err_exit() {
    exit 1
 }
 
+zypper_find_package() {
+  RESULT=$(zypper search python3 | \
+            grep -E '\s+python3[0-9]*\s+' | \
+            tr -d '[:blank:]' | \
+            cut -d\| -f 2 | \
+            sort | \
+            tail -1)
+  PACKAGE=${RESULT:-python3}
+}
+
+zypper_package_check() {
+  [ -z "$1" ] && err_exit "zypper_package_check requires an argument"
+  if zypper search -i "$1" >/dev/null 2>&1
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+apt_find_package() {
+  [ -z "$1" ] && err_exit "apt_find_package requires an argument"
+  PACKAGE=$(apt-cache search "$1" | \
+           awk '{print $1}' | \
+           sort | \
+           tail -1)
+  [ -z "$PACKAGE" ] && err_exit "apt_find_package: no suitable packages found for $1"
+}
+
+apt_package_check() {
+  [ -z "$1" ] && err_exit "apt_package_check requires an argument"
+  if dpkg -s "$1" >/dev/null 2>&1
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 install_python() {
   echo "Installing Python 3"
   source /etc/os-release
@@ -26,11 +65,25 @@ install_python() {
     yum install -q -y python3
     ;;
   ubuntu|debian)
-    apt-get update
-    apt-get install -q -y python3 python3-venv
+    apt_find_package "^python3[0-9.]*$"
+    if ! apt_package_check "$PACKAGE"
+    then
+      apt-get update
+      apt-get install -q -y "$PACKAGE"
+    fi
+    apt_find_package "^python3[0-9.]*-venv$"
+    if ! apt_package_check "$PACKAGE"
+    then
+      apt-get update
+      apt-get install -q -y "$PACKAGE"
+    fi
     ;;
   opensuse-leap|sles)
-    zypper install -y python3
+    zypper_find_package
+    if ! zypper_package_check "$PACKAGE"
+    then
+      zypper install -y "$PACKAGE"
+    fi
     ;;
   arch)
     pacman-key --init
@@ -42,6 +95,15 @@ install_python() {
     err_exit "Unknown Linux distribution $ID"
     ;;
   esac
+}
+
+find_python_bin() {
+  PYTHON_BIN=$(whereis -b python3 | \
+               tr -s '[:blank:]' '\n' | \
+               tail -n +2 | grep ^/usr/bin | \
+               sort | \
+               grep -E '[0-9.]$' | \
+               tail -1)
 }
 
 while getopts "f" opt
@@ -59,7 +121,9 @@ done
 
 cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
 
-if ! which "$PYTHON_BIN" >/dev/null 2>&1 || ! "$PYTHON_BIN" -m ensurepip >/dev/null 2>&1
+find_python_bin
+
+if [ -z "$PYTHON_BIN" ] || ! "$PYTHON_BIN" -m ensurepip >/dev/null 2>&1
 then
   printf "Installing Python 3..."
   if ! install_python >> $SETUP_LOG 2>&1
