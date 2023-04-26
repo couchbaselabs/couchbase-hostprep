@@ -18,13 +18,14 @@ err_exit() {
 }
 
 zypper_find_package() {
-  RESULT=$(zypper search python3 | \
-            grep -E '\s+python3[0-9]*\s+' | \
+  [ -z "$1" ] && err_exit "zypper_find_package requires an argument"
+  PACKAGE=$(zypper search python3 | \
+            grep -E "$1" | \
             tr -d '[:blank:]' | \
             cut -d\| -f 2 | \
             sort | \
             tail -1)
-  PACKAGE=${RESULT:-python3}
+  [ -z "$PACKAGE" ] && err_exit "zypper_find_package: no suitable packages found for $1"
 }
 
 zypper_package_check() {
@@ -79,7 +80,7 @@ install_python() {
     fi
     ;;
   opensuse-leap|sles)
-    zypper_find_package
+    zypper_find_package '\s+python3[0-9]*\s+'
     if ! zypper_package_check "$PACKAGE"
     then
       zypper install -y "$PACKAGE"
