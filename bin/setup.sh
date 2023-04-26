@@ -56,6 +56,8 @@ do
   esac
 done
 
+cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
+
 if ! which "$PYTHON_BIN" >/dev/null 2>&1
 then
   printf "Installing Python 3..."
