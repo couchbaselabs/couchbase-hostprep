@@ -111,6 +111,12 @@ install_python() {
       apt-get update
       apt-get install -q -y "$PACKAGE"
     fi
+    apt_find_package "python3-pip"
+    if ! apt_package_check "$PACKAGE"
+    then
+      apt-get update
+      apt-get install -q -y "$PACKAGE"
+    fi
     ;;
   opensuse-leap|sles)
     zypper_find_package "python3" '\s+python3[0-9]*\s+'
