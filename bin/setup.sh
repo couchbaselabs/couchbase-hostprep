@@ -153,12 +153,13 @@ find_python_bin() {
                sort | \
                grep -E '[0-9.]$' | \
                tail -1)
+  PYTHON_BIN=$(basename "$PYTHON_BIN")
 }
 
 install_check() {
   echo "Package Directory: $PACKAGE_DIR"
   cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
-  . "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
+  source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
   python3 -V
   pip3 freeze
 }
@@ -212,7 +213,7 @@ fi
 echo "Done."
 
 printf "Activating virtual environment... "
-. "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
+source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
 echo "Done."
 
 printf "Installing dependencies... "
