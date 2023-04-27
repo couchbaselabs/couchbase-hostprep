@@ -111,11 +111,6 @@ install_python() {
       apt-get update
       apt-get install -q -y "$PACKAGE"
     fi
-    if ! apt_package_check "python3-pip"
-    then
-      apt-get update
-      apt-get install -q -y "python3-pip"
-    fi
     ;;
   opensuse-leap|sles)
     zypper_find_package "python3" '\s+python3[0-9]*\s+'
@@ -179,7 +174,7 @@ install_python
 
 find_python_bin
 
-if [ -z "$PYTHON_BIN" ] || ! "$PYTHON_BIN" -m ensurepip >/dev/null 2>&1
+if [ -z "$PYTHON_BIN" ]
 then
   err_exit "Python 3 installation unsuccessful, aborting"
 fi
