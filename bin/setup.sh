@@ -180,8 +180,6 @@ do
   esac
 done
 
-cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
-
 install_python
 
 find_python_bin
@@ -190,6 +188,8 @@ if [ -z "$PYTHON_BIN" ]
 then
   err_exit "Python 3 installation unsuccessful, aborting"
 fi
+
+cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
 
 if [ -d "${PACKAGE_DIR:?}/$VENV_NAME" ] && [ $FORCE -eq 0 ]; then
   echo "Virtual environment $PACKAGE_DIR/$VENV_NAME already exists."
