@@ -117,6 +117,12 @@ install_python() {
       apt-get update
       apt-get install -q -y "$PACKAGE"
     fi
+    apt_find_package "libffi-dev"
+    if ! apt_package_check "$PACKAGE"
+    then
+      apt-get update
+      apt-get install -q -y "$PACKAGE"
+    fi
     ;;
   opensuse-leap|sles)
     zypper_find_package "python3" '\s+python3[0-9]*\s+'
@@ -211,8 +217,7 @@ echo "Done."
 
 printf "Installing dependencies... "
 $PYTHON_BIN -m pip install --upgrade pip setuptools wheel >> $SETUP_LOG 2>&1
-pip3 install wheel >> $SETUP_LOG 2>&1
-pip3 install --no-cache-dir -r requirements.txt >> $SETUP_LOG 2>&1
+$PIP_BIN install --no-cache-dir -r requirements.txt >> $SETUP_LOG 2>&1
 if [ $? -ne 0 ]; then
   echo "Setup failed."
   rm -rf "${PACKAGE_DIR:?}/${VENV_NAME:?}"
