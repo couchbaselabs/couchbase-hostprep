@@ -18,18 +18,17 @@ err_exit() {
 }
 
 zypper_find_package() {
-  [ -z "$1" ] && err_exit "zypper_find_package requires an argument"
-  PACKAGE=$(zypper search python3 | \
-            grep -E "$1" | \
+  [ -z "$1" ] || [ -z "$2" ] && err_exit "zypper_find_package requires an argument"
+  PACKAGE=$(zypper search "$1" | \
+            grep -E "$2" | \
             tr -d '[:blank:]' | \
             cut -d\| -f 2 | \
             sort | \
             tail -1)
-  [ -z "$PACKAGE" ] && err_exit "zypper_find_package: no suitable packages found for $1"
 }
 
 zypper_package_check() {
-  [ -z "$1" ] && err_exit "zypper_package_check requires an argument"
+  [ -z "$1" ] && return
   if zypper search -i "$1" >/dev/null 2>&1
   then
     return 0
@@ -48,8 +47,38 @@ apt_find_package() {
 }
 
 apt_package_check() {
-  [ -z "$1" ] && err_exit "apt_package_check requires an argument"
+  [ -z "$1" ] && return
   if dpkg -s "$1" >/dev/null 2>&1
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+yum_find_package() {
+  [ -z "$1" ] && err_exit "yum_find_package requires an argument"
+  PACKAGE=$(yum list available | \
+            awk '{print $1}' | \
+            grep -E "$1" | \
+            grep -v -E '.src$' | \
+            tail -1 | \
+            sed -e 's/\.[a-zA-Z0-9_]*$//')
+}
+
+yum_package_check() {
+  [ -z "$1" ] && return
+  if yum list installed "$1" >/dev/null 2>&1
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+pacman_package_check() {
+  [ -z "$1" ] && return
+  if pacman -Qi "$1" >/dev/null 2>&1
   then
     return 0
   else
@@ -63,7 +92,11 @@ install_python() {
   echo "Install linux type $ID"
   case ${ID:-null} in
   centos|rhel|amzn|rocky|ol|fedora)
-    yum install -q -y python3
+    yum_find_package "^python3[0-9]*\."
+    if ! yum_package_check "$PACKAGE"
+    then
+      yum install -q -y "$PACKAGE"
+    fi
     ;;
   ubuntu|debian)
     apt_find_package "^python3[0-9.]*$"
@@ -80,17 +113,20 @@ install_python() {
     fi
     ;;
   opensuse-leap|sles)
-    zypper_find_package '\s+python3[0-9]*\s+'
+    zypper_find_package "python3" '\s+python3[0-9]*\s+'
     if ! zypper_package_check "$PACKAGE"
     then
       zypper install -y "$PACKAGE"
     fi
     ;;
   arch)
-    pacman-key --init
-    pacman-key --populate
-    pacman -Sy --noconfirm
-    pacman -S --noconfirm python3
+    if ! pacman_package_check python3
+    then
+      pacman-key --init
+      pacman-key --populate
+      pacman -Sy --noconfirm
+      pacman -S --noconfirm python3
+    fi
     ;;
   *)
     err_exit "Unknown Linux distribution $ID"
@@ -107,11 +143,23 @@ find_python_bin() {
                tail -1)
 }
 
-while getopts "f" opt
+install_check() {
+  echo "Package Directory: $PACKAGE_DIR"
+  cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
+  . "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
+  python3 -V
+  pip3 freeze
+}
+
+while getopts "fc" opt
 do
   case $opt in
     f)
       FORCE=1
+      ;;
+    c)
+      install_check
+      exit 0
       ;;
     \?)
       echo "Invalid Argument"
@@ -122,16 +170,13 @@ done
 
 cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
 
+install_python
+
 find_python_bin
 
 if [ -z "$PYTHON_BIN" ] || ! "$PYTHON_BIN" -m ensurepip >/dev/null 2>&1
 then
-  printf "Installing Python 3..."
-  if ! install_python >> $SETUP_LOG 2>&1
-  then
-    err_exit "Python 3 installation unsuccessful, aborting"
-  fi
-  echo "Done."
+  err_exit "Python 3 installation unsuccessful, aborting"
 fi
 
 if [ -d "${PACKAGE_DIR:?}/$VENV_NAME" ] && [ $FORCE -eq 0 ]; then
