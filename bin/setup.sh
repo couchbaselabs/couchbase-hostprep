@@ -105,7 +105,7 @@ install_python() {
       apt-get update
       apt-get install -q -y "$PACKAGE"
     fi
-    apt_find_package "^python3-venv$"
+    apt_find_package "python3-venv"
     if ! apt_package_check "$PACKAGE"
     then
       apt-get update
