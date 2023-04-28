@@ -155,15 +155,19 @@ install_check() {
 install_openssl() {
   [ ! -d "${PACKAGE_DIR}/python" ] && mkdir "${PACKAGE_DIR}/python"
   CWD=$(pwd)
+  printf "Building OpenSSL ... "
+  (
   curl -s -o /var/tmp/openssl-1.1.1t.tar.gz https://www.openssl.org/source/openssl-1.1.1t.tar.gz && \
   cd /var/tmp && \
   tar xzf openssl-1.1.1t.tar.gz && \
   cd openssl-1.1.1t && \
   ./config --prefix="${PACKAGE_DIR}/python/openssl" \
            --openssldir="${PACKAGE_DIR}/python/openssl" \
-           --libdir=/lib64 shared zlib-dynamic && \
+           shared zlib-dynamic && \
   make -j4 && \
-  make install
+  make install_sw
+  ) >> $SETUP_LOG 2>&1
+  echo "Done."
   cd "$CWD" || err_exit "Can not return to previous directory"
 }
 
