@@ -175,8 +175,8 @@ build_python() {
   (
   curl -s -o /var/tmp/Python-3.11.3.tgz https://www.python.org/ftp/python/3.11.3/Python-3.11.3.tgz && \
   cd /var/tmp && \
-  tar xvf Python-3.9.13.tgz && \
-  cd Python-3.9.13 && \
+  tar xvf Python-3.11.3.tgz && \
+  cd Python-3.11.3 && \
   ./configure --enable-optimizations \
               --with-openssl="${PACKAGE_DIR}/python/openssl" \
               --with-openssl-rpath=auto \
