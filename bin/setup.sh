@@ -173,7 +173,7 @@ build_openssl() {
 build_python() {
   printf "Building Python ... "
   (
-  curl -s -o /var/tmp/Python-3.11.3.tgz ttps://www.python.org/ftp/python/3.11.3/Python-3.11.3.tgz && \
+  curl -s -o /var/tmp/Python-3.11.3.tgz https://www.python.org/ftp/python/3.11.3/Python-3.11.3.tgz && \
   cd /var/tmp && \
   tar xvf Python-3.9.13.tgz && \
   cd Python-3.9.13 && \
