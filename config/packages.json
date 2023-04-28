@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "couchbase": {
+      "yum": [],
+      "apt": [],
+      "zypper": [],
+      "pacman": []
+    }
+  }
+}

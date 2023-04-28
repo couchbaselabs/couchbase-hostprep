@@ -152,7 +152,33 @@ install_check() {
   pip3 freeze
 }
 
-while getopts "fc" opt
+install_openssl() {
+  [ ! -d "${PACKAGE_DIR}/python" ] && mkdir "${PACKAGE_DIR}/python"
+  CWD=$(pwd)
+  curl -s -o /var/tmp/openssl-1.1.1t.tar.gz https://www.openssl.org/source/openssl-1.1.1t.tar.gz && \
+  cd /var/tmp && \
+  tar xzf openssl-1.1.1t.tar.gz && \
+  cd openssl-1.1.1t && \
+  ./config --prefix="${PACKAGE_DIR}/python/openssl" \
+           --openssldir="${PACKAGE_DIR}/python/openssl" \
+           --libdir=/lib64 shared zlib-dynamic && \
+  make -j4 && \
+  make install
+  cd "$CWD" || err_exit "Can not return to previous directory"
+}
+
+install_python() {
+  curl -s -o /var/tmp/Python-3.9.16.tgz https://www.python.org/ftp/python/3.9.13/Python-3.9.16.tgz && \
+  cd /var/tmp && \
+  tar xvf Python-3.9.13.tgz && \
+  cd Python-3.9.13 && \
+  ./configure --enable-optimizations \
+              --with-openssl="${PACKAGE_DIR}/python/openssl" \
+              --prefix="${PACKAGE_DIR}/python" && \
+  make altinstall
+}
+
+while getopts "fce:" opt
 do
   case $opt in
     f)
@@ -161,6 +187,10 @@ do
     c)
       install_check
       exit 0
+      ;;
+    e)
+      "$OPTARG"
+      exit
       ;;
     \?)
       echo "Invalid Argument"
