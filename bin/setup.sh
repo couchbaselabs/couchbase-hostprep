@@ -152,9 +152,8 @@ install_check() {
   pip3 freeze
 }
 
-install_openssl() {
+build_openssl() {
   [ ! -d "${PACKAGE_DIR}/python" ] && mkdir "${PACKAGE_DIR}/python"
-  CWD=$(pwd)
   printf "Building OpenSSL ... "
   (
   curl -s -o /var/tmp/openssl-1.1.1t.tar.gz https://www.openssl.org/source/openssl-1.1.1t.tar.gz && \
@@ -166,12 +165,14 @@ install_openssl() {
            shared zlib-dynamic && \
   make -j4 && \
   make install_sw
+  [ $? -ne 0 ] && err_exit "OpenSSL build failed"
   ) >> $SETUP_LOG 2>&1
   echo "Done."
-  cd "$CWD" || err_exit "Can not return to previous directory"
 }
 
-install_python() {
+build_python() {
+  printf "Building Python ... "
+  (
   curl -s -o /var/tmp/Python-3.11.3.tgz ttps://www.python.org/ftp/python/3.11.3/Python-3.11.3.tgz && \
   cd /var/tmp && \
   tar xvf Python-3.9.13.tgz && \
@@ -181,6 +182,9 @@ install_python() {
               --with-openssl-rpath=auto \
               --prefix="${PACKAGE_DIR}/python" && \
   make altinstall
+  [ $? -ne 0 ] && err_exit "Python build failed"
+  ) >> $SETUP_LOG 2>&1
+  echo "Done."
 }
 
 while getopts "fce:" opt
