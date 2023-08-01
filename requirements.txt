@@ -1,2 +1,8 @@
-attrs>=19.3.0
-ansible>=4.10.0
+attrs>=22.2.0
+pytest>=7.0.1
+pytest-asyncio>=0.16.0
+pytest-rerunfailures>=10.3
+pytest-mock>=3.6.1
+docker>=5.0.3
+ansible>=8.2.0
+ansible-runner>=2.3.3

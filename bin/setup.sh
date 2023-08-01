@@ -1,14 +1,27 @@
 #!/bin/bash
-#
+# shellcheck disable=SC2086
+# shellcheck disable=SC2181
+# shellcheck disable=SC1090
 #
 DIRECTORY=$(dirname "$0")
 SCRIPT_DIR=$(cd "$DIRECTORY" && pwd)
 PACKAGE_DIR=$(dirname "$SCRIPT_DIR")
 VENV_NAME=venv
 FORCE=0
-SETUP_LOG=/var/tmp/hostprep_setup.log
-PYTHON_BIN=${PYTHON_BIN:-python3}
-PIP_BIN=${PIP_BIN:-pip3}
+SETUP_LOG="setup.log"
+INSTALL_PYTHON=1
+
+PYTHON_VERSION="3.9"
+PIP_VERSION="3.9"
+PYTHON39_YUM="python39 python39-pip python39-devel"
+PYTHON39_APT="python3.9 python3.9-dev python3.9-venv"
+PYTHON39_ZYPPER="python39 python39-devel python3-pip"
+PYTHON3_ZYPPER="python3 python3-devel python3-pip"
+PYTHON311_ZYPPER="python311 python311-devel python311-pip"
+PYTHON39_PACMAN="python39"
+
+PYTHON_BIN="python${PYTHON_VERSION}"
+PIP_BIN="pip${PIP_VERSION}"
 
 err_exit() {
    if [ -n "$1" ]; then
@@ -17,116 +30,114 @@ err_exit() {
    exit 1
 }
 
-zypper_find_package() {
-  [ -z "$1" ] || [ -z "$2" ] && err_exit "zypper_find_package requires an argument"
-  PACKAGE=$(zypper search "$1" | \
-            grep -E "$2" | \
-            tr -d '[:blank:]' | \
-            cut -d\| -f 2 | \
-            sort | \
-            tail -1)
-}
-
-zypper_package_check() {
-  [ -z "$1" ] && return
-  if zypper search -i "$1" >/dev/null 2>&1
+set_tz() {
+  if [ -f /etc/timezone ]
   then
-    return 0
-  else
-    return 1
-  fi
-}
-
-apt_find_package() {
-  [ -z "$1" ] && err_exit "apt_find_package requires an argument"
-  PACKAGE=$(apt-cache search "$1" | \
-           awk '{print $1}' | \
-           sort | \
-           tail -1)
-  [ -z "$PACKAGE" ] && err_exit "apt_find_package: no suitable packages found for $1"
-}
-
-apt_package_check() {
-  [ -z "$1" ] && return
-  if dpkg -s "$1" >/dev/null 2>&1
+    TZ_DATA=$(cat /etc/timezone)
+  elif which timedatectl >/dev/null 2>&1
   then
-    return 0
+    TZ_DATA=$(timedatectl show | grep Timezone | cut -d= -f2)
   else
-    return 1
+    TZ_DATA="Etc/UTC"
   fi
+  export TZ=${TZ_DATA}
 }
 
-yum_find_package() {
-  [ -z "$1" ] && err_exit "yum_find_package requires an argument"
-  PACKAGE=$(yum list available | \
-            awk '{print $1}' | \
-            grep -E "$1" | \
-            grep -v -E '.src$' | \
-            tail -1 | \
-            sed -e 's/\.[a-zA-Z0-9_]*$//')
+read_os_info() {
+  source /etc/os-release
+  OS_MAJOR_REV="$(echo $VERSION_ID | cut -d. -f1)"
+  OS_MINOR_REV="$(echo $VERSION_ID | cut -d. -f2)"
+  export OS_MAJOR_REV OS_MINOR_REV ID
+  echo "Linux type $ID - $NAME version $OS_MAJOR_REV"
 }
 
-yum_package_check() {
-  [ -z "$1" ] && return
-  if yum list installed "$1" >/dev/null 2>&1
-  then
-    return 0
-  else
-    return 1
-  fi
+set_python_version() {
+   PYTHON_VERSION=$1
+   PIP_VERSION=$PYTHON_VERSION
+   PYTHON_BIN="python${PYTHON_VERSION}"
+   PIP_BIN="pip${PIP_VERSION}"
 }
 
-pacman_package_check() {
-  [ -z "$1" ] && return
-  if pacman -Qi "$1" >/dev/null 2>&1
-  then
-    return 0
-  else
-    return 1
-  fi
+install_prerequisites() {
+  case ${ID:-null} in
+  amzn|rocky|ol|fedora)
+    yum install -y which
+    ;;
+  centos|rhel)
+    ;;
+  ubuntu)
+    if [ "$OS_MAJOR_REV" -gt 20 ]; then
+      set_tz
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -q -y software-properties-common
+      add-apt-repository -y ppa:deadsnakes/ppa
+    fi
+    ;;
+  debian)
+    ;;
+  opensuse-leap|sles)
+    zypper install -y which
+    ;;
+  arch)
+    pacman-key --init
+    pacman-key --populate
+    pacman -Sy --noconfirm
+    ;;
+  *)
+    err_exit "Unknown Linux distribution $ID"
+    ;;
+  esac
 }
 
 install_python() {
-  echo "Installing Python 3"
-  source /etc/os-release
-  echo "Install linux type $ID"
   case ${ID:-null} in
   centos|rhel|amzn|rocky|ol|fedora)
-    yum_find_package "^python3[0-9]*\."
-    if ! yum_package_check "$PACKAGE"
+    if [ "$ID" = "amzn" ] && [ "$OS_MAJOR_REV" -eq 2 ]
     then
-      yum install -q -y "$PACKAGE"
+      amazon-linux-extras enable python3.8
+      yum install -y python3.8
+      set_python_version "3.8"
+    else
+      yum install -q -y $PYTHON39_YUM
     fi
     ;;
   ubuntu|debian)
-    apt_find_package "^python3[0-9.]*$"
-    if ! apt_package_check "$PACKAGE"
-    then
-      apt-get update
-      apt-get install -q -y "$PACKAGE"
-    fi
-    apt_find_package "python3-venv"
-    if ! apt_package_check "$PACKAGE"
-    then
-      apt-get update
-      apt-get install -q -y "$PACKAGE"
-    fi
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -q -y $PYTHON39_APT
     ;;
   opensuse-leap|sles)
-    zypper_find_package "python3" '\s+python3[0-9]*\s+'
-    if ! zypper_package_check "$PACKAGE"
+    if [ "$ID" = "sles" ] && [ "$OS_MINOR_REV" -ge 4 ]
     then
-      zypper install -y "$PACKAGE"
+      zypper install -y $PYTHON311_ZYPPER
+      set_python_version "3.11"
+    else
+      PIP_VERSION="3"
+      zypper install -y $PYTHON39_ZYPPER
     fi
     ;;
   arch)
-    if ! pacman_package_check python3
-    then
-      pacman-key --init
-      pacman-key --populate
-      pacman -Sy --noconfirm
-      pacman -S --noconfirm python3
-    fi
+    pacman -S --noconfirm $PYTHON39_PACMAN
+    ;;
+  *)
+    err_exit "Unknown Linux distribution $ID"
+    ;;
+  esac
+}
+
+post_install() {
+  case ${ID:-null} in
+  centos|rhel|amzn|rocky|ol|fedora)
+    ;;
+  ubuntu|debian)
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -q -y python3-dev python3-venv
+    ;;
+  opensuse-leap|sles)
+    ;;
+  arch)
     ;;
   *)
     err_exit "Unknown Linux distribution $ID"
@@ -135,13 +146,10 @@ install_python() {
 }
 
 find_python_bin() {
-  PYTHON_BIN=$(whereis -b python3 | \
-               tr -s '[:blank:]' '\n' | \
-               tail -n +2 | grep ^/usr/bin | \
-               sort | \
-               grep -E '[0-9.]$' | \
-               tail -1)
-  PYTHON_BIN=$(basename "$PYTHON_BIN")
+  if ! which $PYTHON_BIN > /dev/null 2>&1
+  then
+    err_exit "Python executable $PYTHON_BIN not found."
+  fi
 }
 
 install_check() {
@@ -150,41 +158,6 @@ install_check() {
   source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
   python3 -V
   pip3 freeze
-}
-
-build_openssl() {
-  [ ! -d "${PACKAGE_DIR}/python" ] && mkdir "${PACKAGE_DIR}/python"
-  printf "Building OpenSSL ... "
-  (
-  curl -s -o /var/tmp/openssl-1.1.1t.tar.gz https://www.openssl.org/source/openssl-1.1.1t.tar.gz && \
-  cd /var/tmp && \
-  tar xzf openssl-1.1.1t.tar.gz && \
-  cd openssl-1.1.1t && \
-  ./config --prefix="${PACKAGE_DIR}/python/openssl" \
-           --openssldir="${PACKAGE_DIR}/python/openssl" \
-           shared zlib-dynamic && \
-  make -j4 && \
-  make install_sw
-  [ $? -ne 0 ] && err_exit "OpenSSL build failed"
-  ) >> $SETUP_LOG 2>&1
-  echo "Done."
-}
-
-build_python() {
-  printf "Building Python ... "
-  (
-  curl -s -o /var/tmp/Python-3.11.3.tgz https://www.python.org/ftp/python/3.11.3/Python-3.11.3.tgz && \
-  cd /var/tmp && \
-  tar xvf Python-3.11.3.tgz && \
-  cd Python-3.11.3 && \
-  ./configure --enable-optimizations \
-              --with-openssl="${PACKAGE_DIR}/python/openssl" \
-              --with-openssl-rpath=auto \
-              --prefix="${PACKAGE_DIR}/python" && \
-  make altinstall
-  [ $? -ne 0 ] && err_exit "Python build failed"
-  ) >> $SETUP_LOG 2>&1
-  echo "Done."
 }
 
 while getopts "fce:" opt
@@ -208,16 +181,32 @@ do
   esac
 done
 
-install_python
+read_os_info
 
-find_python_bin
+echo "Checking prerequisites"
+install_prerequisites >> $SETUP_LOG 2>&1
 
-if [ -z "$PYTHON_BIN" ]
+if python3 -V >/dev/null 2>&1
 then
-  err_exit "Python 3 installation unsuccessful, aborting"
+  CURRENT_MAJOR_VERSION=$(python3 -V | awk '{print $2}' | cut -d. -f1)
+  CURRENT_MINOR_VERSION=$(python3 -V | awk '{print $2}' | cut -d. -f2)
+  if [ "$CURRENT_MINOR_VERSION" -ge 9 ]
+  then
+    INSTALL_PYTHON=0
+    set_python_version "${CURRENT_MAJOR_VERSION}.${CURRENT_MINOR_VERSION}"
+  fi
 fi
 
-cd "$PACKAGE_DIR" || err_exit "can not change to package directory"
+if [ "$INSTALL_PYTHON" -eq 1 ]
+then
+  echo "Installing Python"
+  install_python >> $SETUP_LOG 2>&1
+else
+  echo "Configuring Python"
+  post_install >> $SETUP_LOG 2>&1
+fi
+
+find_python_bin
 
 if [ -d "${PACKAGE_DIR:?}/$VENV_NAME" ] && [ $FORCE -eq 0 ]; then
   echo "Virtual environment $PACKAGE_DIR/$VENV_NAME already exists."
@@ -243,6 +232,11 @@ printf "Activating virtual environment... "
 source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
 echo "Done."
 
+if ! [ -f requirements.txt ]; then
+  echo "No requirements.txt found."
+  exit 1
+fi
+
 printf "Installing dependencies... "
 $PYTHON_BIN -m pip install --upgrade pip setuptools wheel >> $SETUP_LOG 2>&1
 $PIP_BIN install --no-cache-dir -r requirements.txt >> $SETUP_LOG 2>&1
@@ -252,5 +246,13 @@ if [ $? -ne 0 ]; then
   exit 1
 else
   echo "Done."
-  echo "Setup successful."
 fi
+
+if [ -x "${SCRIPT_DIR}/post_setup.sh" ]
+then
+  echo "Running post setup steps"
+  "${SCRIPT_DIR}/post_setup.sh" >> $SETUP_LOG 2>&1
+  [ $? -ne 0 ] && err_exit "Post setup script error."
+fi
+
+echo "Setup complete."

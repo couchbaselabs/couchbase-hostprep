@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+SCRIPTDIR=$(cd $(dirname $0) && pwd)
+PKGDIR=$(dirname "$SCRIPTDIR")
+
+if [ ! -d "$PKGDIR/venv" ]; then
+  echo "Please run setup.sh first."
+  exit 1
+fi
+
+export PYTHONPATH=$PYTHONPATH:$PKGDIR
+cd $PKGDIR
+. $PKGDIR/venv/bin/activate
+python3 -W ignore $SCRIPTDIR/install.py $@

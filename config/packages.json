@@ -1,10 +1,30 @@
 {
-  "packages": {
-    "couchbase": {
-      "yum": [],
-      "apt": [],
-      "zypper": [],
-      "pacman": []
+  "bundles": {
+    "Base": {
+      "centos|rhel|amzn|rocky|ol|fedora": {
+        "requires": [],
+        "pre": null,
+        "run": "base_sw_yum.yaml",
+        "post": null
+      },
+      "ubuntu|debian": {
+        "requires": [],
+        "pre": null,
+        "run": "base_sw_apt.yaml",
+        "post": null
+      },
+      "zypper": {
+        "requires": [],
+        "pre": null,
+        "run": "base_sw_zypper.yaml",
+        "post": null
+      },
+      "pacman": {
+        "requires": [],
+        "pre": null,
+        "run": "base_sw_pacman.yaml",
+        "post": null
+      }
     }
   }
 }
