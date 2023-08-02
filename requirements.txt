@@ -4,5 +4,5 @@ pytest-asyncio>=0.16.0
 pytest-rerunfailures>=10.3
 pytest-mock>=3.6.1
 docker>=5.0.3
-ansible>=8.2.0
+ansible>=6.7.0
 ansible-runner>=2.3.3

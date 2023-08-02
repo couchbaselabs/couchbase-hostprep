@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  gather_facts: no
+  name: Install
+  tasks:
+    - name: EPEL
+      ansible.builtin.package:
+        name:
+          - epel-release
+        state: latest
+- hosts: localhost
+  gather_facts: no
+  name: Install
+  tasks:
+    - name: Packages
+      ansible.builtin.package:
+        name:
+          - jq
+          - wget
+          - vim-enhanced
+          - java-11-openjdk
+          - maven
+          - nc
+          - sysstat
+          - yum-utils
+          - ca-certificates
+          - curl
+          - redhat-lsb
+          - net-tools
+        state: latest
