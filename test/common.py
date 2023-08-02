@@ -3,6 +3,7 @@
 import docker
 from docker.errors import APIError
 from docker.models.containers import Container
+from typing import Union
 import io
 import os
 import tarfile
@@ -65,7 +66,7 @@ def start_container(image: str) -> Container:
     return container_id
 
 
-def run_in_container(container_id: Container, directory: str, command: str):
+def run_in_container(container_id: Container, directory: str, command: Union[str, list[str]]):
     exit_code, output = container_id.exec_run(command, workdir=directory)
     for line in output.split(b'\n'):
         print(line.decode("utf-8"))

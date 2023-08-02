@@ -5,7 +5,7 @@ from __future__ import annotations
 import attr
 import json
 from typing import Optional, List
-from lib.osinfo import OSRelease
+from hostpreplib.osinfo import OSRelease
 
 
 class BundleManagerError(Exception):

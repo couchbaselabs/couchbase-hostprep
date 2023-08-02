@@ -5,18 +5,18 @@
   tasks:
     - name: Packages
       ansible.builtin.package:
-          name:
-            - jq
-            - wget
-            - vim
-            - openjdk-11-jdk
-            - maven
-            - netcat
-            - sysstat
-            - apt-utils
-            - ca-certificates
-            - curl
-            - gnupg
-            - lsb-release
-            - net-tools
-          state: latest
+        name:
+          - jq
+          - wget
+          - vim
+          - openjdk-11-jdk
+          - maven
+          - netcat
+          - sysstat
+          - apt-utils
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - net-tools
+        state: latest

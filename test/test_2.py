@@ -3,7 +3,7 @@
 import os
 import logging
 import warnings
-from lib.osinfo import OSRelease
+from py_host_prep.hostpreplib.osinfo import OSRelease
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()

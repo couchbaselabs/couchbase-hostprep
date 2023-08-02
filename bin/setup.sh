@@ -10,13 +10,13 @@ VENV_NAME=venv
 FORCE=0
 SETUP_LOG="setup.log"
 INSTALL_PYTHON=1
+SYSTEM_INSTALL=0
 
 PYTHON_VERSION="3.9"
 PIP_VERSION="3.9"
 PYTHON39_YUM="python39 python39-pip python39-devel"
-PYTHON39_APT="python3.9 python3.9-dev python3.9-venv"
+PYTHON39_APT="python3.9 python3.9-dev python3.9-venv python3-pip"
 PYTHON39_ZYPPER="python39 python39-devel python3-pip"
-PYTHON3_ZYPPER="python3 python3-devel python3-pip"
 PYTHON311_ZYPPER="python311 python311-devel python311-pip"
 PYTHON39_PACMAN="python39"
 
@@ -160,7 +160,7 @@ install_check() {
   pip3 freeze
 }
 
-while getopts "fce:" opt
+while getopts "fcsn:" opt
 do
   case $opt in
     f)
@@ -170,9 +170,11 @@ do
       install_check
       exit 0
       ;;
-    e)
-      "$OPTARG"
-      exit
+    s)
+      SYSTEM_INSTALL=1
+      ;;
+    n)
+      VENV_NAME=$OPTARG
       ;;
     \?)
       echo "Invalid Argument"
@@ -220,17 +222,19 @@ if [ -d "${PACKAGE_DIR:?}/$VENV_NAME" ] && [ $FORCE -eq 0 ]; then
   fi
 fi
 
-printf "Creating virtual environment... "
-$PYTHON_BIN -m venv "${PACKAGE_DIR:?}/$VENV_NAME"
-if [ $? -ne 0 ]; then
-  echo "Virtual environment setup failed."
-  exit 1
-fi
-echo "Done."
+if [ "$SYSTEM_INSTALL" -eq 0 ]; then
+  printf "Creating virtual environment... "
+  $PYTHON_BIN -m venv "${PACKAGE_DIR:?}/$VENV_NAME"
+  if [ $? -ne 0 ]; then
+    echo "Virtual environment setup failed."
+    exit 1
+  fi
+  echo "Done."
 
-printf "Activating virtual environment... "
-source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
-echo "Done."
+  printf "Activating virtual environment... "
+  source "${PACKAGE_DIR:?}/${VENV_NAME:?}/bin/activate"
+  echo "Done."
+fi
 
 if ! [ -f requirements.txt ]; then
   echo "No requirements.txt found."

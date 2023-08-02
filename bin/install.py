@@ -9,7 +9,7 @@ import signal
 import inspect
 import traceback
 import ansible_runner
-from lib.bundles import SoftwareBundle
+from hostpreplib.bundles import SoftwareBundle
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
@@ -80,7 +80,7 @@ class RunMain(object):
             for playbook in [bundle.pre, bundle.run, bundle.post]:
                 if not playbook:
                     continue
-                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}", extravars=extra_vars)
+                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}")
                 print(f"{r.status}: {r.rc}")
                 for each_host_event in r.events:
                     print(each_host_event['event'])

@@ -41,7 +41,7 @@ def manual_1(args: argparse.Namespace):
         container_mkdir(container_id, destination)
         copy_dir_to_container(container_id, bin_dir, destination)
         copy_to_container(container_id, requirements, destination)
-        run_in_container(container_id, destination, "bin/setup.sh")
+        run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
         stop_container(container_id)
     except Exception:
         raise
@@ -53,6 +53,7 @@ def manual_2(args: argparse.Namespace):
     cfg_dir = f"{parent}/config"
     lib_dir = f"{parent}/lib"
     playbook_dir = f"{parent}/playbooks"
+    hostprep_dir = f"{parent}/py_host_prep"
     requirements = f"{parent}/requirements.txt"
     destination = "/usr/local/hostprep"
 
@@ -63,8 +64,9 @@ def manual_2(args: argparse.Namespace):
         copy_dir_to_container(container_id, cfg_dir, destination)
         copy_dir_to_container(container_id, lib_dir, destination)
         copy_dir_to_container(container_id, playbook_dir, destination)
+        copy_dir_to_container(container_id, hostprep_dir, destination)
         copy_to_container(container_id, requirements, destination)
-        run_in_container(container_id, destination, "bin/setup.sh")
+        run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
     except Exception:
         raise
 
@@ -75,6 +77,7 @@ def refresh():
     cfg_dir = f"{parent}/config"
     lib_dir = f"{parent}/lib"
     playbook_dir = f"{parent}/playbooks"
+    hostprep_dir = f"{parent}/py_host_prep"
     requirements = f"{parent}/requirements.txt"
     destination = "/usr/local/hostprep"
 
@@ -84,6 +87,7 @@ def refresh():
         copy_dir_to_container(container_id, cfg_dir, destination)
         copy_dir_to_container(container_id, lib_dir, destination)
         copy_dir_to_container(container_id, playbook_dir, destination)
+        copy_dir_to_container(container_id, hostprep_dir, destination)
         copy_to_container(container_id, requirements, destination)
     except Exception:
         raise

@@ -3,7 +3,7 @@
 import os
 import logging
 import warnings
-from lib.bundles import SoftwareBundle
+from py_host_prep.hostpreplib.bundles import SoftwareBundle
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
