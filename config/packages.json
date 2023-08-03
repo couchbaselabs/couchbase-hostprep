@@ -13,13 +13,13 @@
         "run": "base_sw_apt.yaml",
         "post": null
       },
-      "zypper": {
+      "opensuse-leap|sles": {
         "requires": [],
         "pre": null,
         "run": "base_sw_zypper.yaml",
         "post": null
       },
-      "pacman": {
+      "arch": {
         "requires": [],
         "pre": null,
         "run": "base_sw_pacman.yaml",
