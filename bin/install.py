@@ -55,12 +55,13 @@ class CustomFormatter(logging.Formatter):
     format_message = "%(message)s"
     format_line = "(%(filename)s:%(lineno)d)"
     format_extra = " [%(name)s](%(filename)s:%(lineno)d)"
+    format_timestamp = "%(asctime)s"
     FORMATS = {
-        logging.DEBUG: f"{grey}{format_level}{reset} - {format_message}",
-        logging.INFO: f"{green}{format_level}{reset} - {format_message}",
-        logging.WARNING: f"{yellow}{format_level}{reset} - {format_message}",
-        logging.ERROR: f"{red}{format_level}{reset} - {format_message}",
-        logging.CRITICAL: f"{red}{format_level}{reset} - {format_message}"
+        logging.DEBUG: f"{format_timestamp} [{grey}{format_level}{reset}] {format_message}",
+        logging.INFO: f"{format_timestamp} [{green}{format_level}{reset}] {format_message}",
+        logging.WARNING: f"{format_timestamp} [{yellow}{format_level}{reset}] {format_message}",
+        logging.ERROR: f"{format_timestamp} [{red}{format_level}{reset}] {format_message}",
+        logging.CRITICAL: f"{format_timestamp} [{red}{format_level}{reset}] {format_message}"
     }
 
     def format(self, record):
@@ -93,6 +94,11 @@ class RunMain(object):
         self.config = f"{self.parent}/config/packages.json"
         self.op = SoftwareBundle(f"{self.parent}/config/packages.json")
 
+    @staticmethod
+    def run_timestamp(label: str):
+        timestamp = datetime.utcnow().strftime("%b %d %H:%M:%S")
+        logger.info(f" ==== Run {label} {timestamp} ====")
+
     def run(self, options):
         os_name = self.op.os.os_name
         os_major = self.op.os.os_major_release
@@ -107,29 +113,25 @@ class RunMain(object):
         for b in options.bundles:
             self.op.add(b)
 
-        timestamp = datetime.utcnow().strftime("%b %d %H:%M:%S")
-        logger.info(f" ==== Run begins {timestamp} ====")
+        self.run_timestamp("begins")
 
         for bundle in self.op.install_list():
             logger.info(f"Executing bundle {bundle.name}")
             for playbook in [bundle.pre, bundle.run, bundle.post]:
-                f = io.StringIO()
                 if not playbook:
                     continue
                 logger.info(f"Running playbook {playbook}")
                 stdout_save = sys.stdout
                 sys.stdout = StreamToLogger(logger, logging.INFO)
-                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}", extravars=extra_vars, _output=f)
+                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}", extravars=extra_vars)
                 sys.stdout = stdout_save
                 logger.info(f"Playbook status: {r.status}")
                 if r.rc != 0:
                     logger.error(r.stats)
-                    timestamp = datetime.utcnow().strftime("%b %d %H:%M:%S")
-                    logger.info(f" ==== Run failed {timestamp} ====")
+                    self.run_timestamp("failed")
                     sys.exit(r.rc)
 
-        timestamp = datetime.utcnow().strftime("%b %d %H:%M:%S")
-        logger.info(f" ==== Run finished {timestamp} ====")
+        self.run_timestamp("successful")
 
 
 def main():
@@ -142,11 +144,13 @@ def main():
 
     if parameters.debug:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+    if parameters.verbose:
         screen_handler = logging.StreamHandler()
         screen_handler.setFormatter(CustomFormatter())
         logger.addHandler(screen_handler)
-    else:
-        logger.setLevel(logging.INFO)
 
     file_handler = logging.FileHandler(debug_file)
     file_handler.setFormatter(CustomFormatter())
