@@ -24,7 +24,10 @@ class OSRelease(object):
     def as_dict(self):
         with open(self.os_release) as data:
             reader = csv.reader(data, delimiter="=")
-            self.os_info = {rows[0]: rows[1] for rows in reader}
+            for rows in reader:
+                if len(rows) < 2:
+                    continue
+                self.os_info.update({rows[0]: rows[1]})
 
     @property
     def os_id(self):

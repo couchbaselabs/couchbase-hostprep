@@ -72,7 +72,9 @@ class RunMain(object):
 
     def run(self, options):
         extra_vars = {
-            'ansible_python_interpreter': f"{self.parent}/venv/bin/python3"
+            'os_name': self.op.os.os_name,
+            'os_major': self.op.os.os_major_release,
+            'os_minor': self.op.os.os_minor_release,
         }
         for b in options.bundles:
             self.op.add(b)
@@ -80,7 +82,7 @@ class RunMain(object):
             for playbook in [bundle.pre, bundle.run, bundle.post]:
                 if not playbook:
                     continue
-                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}")
+                r = ansible_runner.run(playbook=f"{self.parent}/playbooks/{playbook}", extravars=extra_vars)
                 print(f"{r.status}: {r.rc}")
                 for each_host_event in r.events:
                     print(each_host_event['event'])

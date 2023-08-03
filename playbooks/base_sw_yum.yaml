@@ -1,16 +1,27 @@
 ---
 - hosts: localhost
   gather_facts: no
-  name: Install
+  name: Install Non-RHEL
   tasks:
     - name: EPEL
       ansible.builtin.package:
         name:
           - epel-release
         state: latest
+      when: os_name != "rhel"
 - hosts: localhost
   gather_facts: no
-  name: Install
+  name: Install RHEL
+  tasks:
+    - name: EPEL
+      ansible.builtin.package:
+        name:
+          - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ os_major }}.noarch.rpm"
+        state: latest
+      when: os_name == "rhel"
+- hosts: localhost
+  gather_facts: no
+  name: Install Main
   tasks:
     - name: Packages
       ansible.builtin.package:
@@ -21,10 +32,7 @@
           - java-11-openjdk
           - maven
           - nc
-          - sysstat
           - yum-utils
           - ca-certificates
-          - curl
-          - redhat-lsb
           - net-tools
         state: latest
