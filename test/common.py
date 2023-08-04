@@ -51,9 +51,11 @@ def start_container(image: str) -> Container:
 
     try:
         container_id = client.containers.run(image,
+                                             tty=True,
                                              detach=True,
+                                             privileged=True,
                                              name="pytest",
-                                             command=["tail", "-f", "/dev/null"]
+                                             command=["/usr/sbin/init"]
                                              )
     except docker.errors.APIError as e:
         if e.status_code == 409:

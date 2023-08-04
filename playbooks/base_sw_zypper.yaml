@@ -14,4 +14,5 @@
           - netcat-openbsd
           - ca-certificates
           - net-tools
+          - chrony
         state: latest

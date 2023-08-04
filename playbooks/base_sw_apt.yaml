@@ -19,4 +19,6 @@
           - gnupg
           - lsb-release
           - net-tools
+          - chrony
+          - procps
         state: latest

@@ -35,4 +35,6 @@
           - yum-utils
           - ca-certificates
           - net-tools
+          - chrony
+          - procps
         state: latest
