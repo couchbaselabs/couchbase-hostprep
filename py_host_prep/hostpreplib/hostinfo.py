@@ -51,9 +51,10 @@ class System:
     def all_services(self):
         return [(s.name, s.status) for s in self.services]
 
-    def is_running(self, name: str):
+    def is_running(self, name: str) -> bool:
         name = f"{name}.service"
-        return next((s for s in self.services if s.name == name and s.status == 'running'), None)
+        result = next((s for s in self.services if s.name == name and s.status == 'running'), None)
+        return result is not None
 
 
 class HostInfo(object):

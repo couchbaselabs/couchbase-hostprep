@@ -1,7 +1,7 @@
 ##
 ##
 
-from typing import Union
+from typing import Union, List
 import subprocess
 import logging
 import io
@@ -20,7 +20,7 @@ class RunShellCommand(object):
         pass
 
     @staticmethod
-    def cmd_exec(command: Union[str, list[str]], directory: str):
+    def cmd_exec(command: Union[str, List[str]], directory: str):
         buffer = io.BytesIO()
         logger.debug(f"Shell command: {' '.join(command)}")
 
