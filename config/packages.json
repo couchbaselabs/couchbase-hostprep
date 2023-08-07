@@ -59,6 +59,40 @@
         "run": "enable_chrony_rhel.yaml",
         "post": null
       }
+    },
+    "Firewall": {
+      "centos|rhel|amzn|rocky|ol|fedora": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_firewalld_rhel.yaml",
+        "post": null
+      },
+      "ubuntu|debian": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_firewall_dep.yaml",
+        "post": null
+      },
+      "opensuse-leap|sles": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_firewalld_rhel.yaml",
+        "post": null
+      },
+      "arch": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_firewall_dep.yaml",
+        "post": null
+      }
     }
   }
 }
