@@ -59,7 +59,11 @@ class System:
 class HostInfo(object):
 
     def __init__(self):
-        self.system = System.create()
+        self._system = System.create()
+
+    @property
+    def system(self):
+        return self._system
 
     def get_service_status(self):
         command = ["systemctl", "list-units", "--type=service", "--no-pager", "--no-legend"]
@@ -76,4 +80,4 @@ class HostInfo(object):
             line_string = line.decode("utf-8")
             items = line_string.strip().split()
             if len(items) >= 4:
-                self.system.service(items[0], items[1], items[2], items[3])
+                self._system.service(items[0], items[1], items[2], items[3])

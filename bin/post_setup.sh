@@ -20,20 +20,24 @@ install_ansible() {
   centos|rhel|amzn|rocky|ol|fedora)
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
+    ansible-galaxy collection install community.general
     ;;
   ubuntu|debian)
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -q -y python3-apt
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
+    ansible-galaxy collection install community.general
     ;;
   opensuse-leap|sles)
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
+    ansible-galaxy collection install community.general
     ;;
   arch)
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
+    ansible-galaxy collection install community.general
     ;;
   *)
     err_exit "Unknown Linux distribution $ID"

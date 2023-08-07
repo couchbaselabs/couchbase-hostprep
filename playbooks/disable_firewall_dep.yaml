@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  gather_facts: no
+  name: Disable Service
+  tasks:
+    - name: Firewall
+      community.general.ufw:
+        state: disabled

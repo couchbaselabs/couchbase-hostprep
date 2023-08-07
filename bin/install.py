@@ -5,7 +5,6 @@ import warnings
 import argparse
 import sys
 import os
-import io
 import signal
 import inspect
 import traceback
@@ -13,6 +12,7 @@ import datetime
 import ansible_runner
 from datetime import datetime
 from hostpreplib.bundles import SoftwareBundle
+from hostpreplib.hostinfo import HostInfo
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
@@ -93,11 +93,23 @@ class RunMain(object):
         self.parent = os.path.dirname(self.current)
         self.config = f"{self.parent}/config/packages.json"
         self.op = SoftwareBundle(f"{self.parent}/config/packages.json")
+        self.host_info = HostInfo()
+        self.host_info.get_service_status()
 
     @staticmethod
     def run_timestamp(label: str):
         timestamp = datetime.utcnow().strftime("%b %d %H:%M:%S")
         logger.info(f" ==== Run {label} {timestamp} ====")
+
+    def is_time_synced(self):
+        return self.host_info.system.is_running("ntp") \
+            or self.host_info.system.is_running("ntpd") \
+            or self.host_info.system.is_running("systemd-timesyncd") \
+            or self.host_info.system.is_running("chrony") \
+            or self.host_info.system.is_running("chronyd")
+
+    def is_firewalld_enabled(self):
+        return self.host_info.system.is_running("firewalld")
 
     def run(self, options):
         os_name = self.op.os.os_name
@@ -108,6 +120,8 @@ class RunMain(object):
             'os_name': os_name,
             'os_major': os_major,
             'os_minor': os_minor,
+            'time_svc_enabled': self.is_time_synced(),
+            'firewalld_enabled': self.is_firewalld_enabled()
         }
 
         for b in options.bundles:

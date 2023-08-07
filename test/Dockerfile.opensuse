@@ -1,0 +1,4 @@
+# Dockerfile
+
+FROM opensuse/leap
+RUN zypper in -y systemd systemd-sysvinit
