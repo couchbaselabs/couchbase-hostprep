@@ -36,6 +36,7 @@ class Parameters(object):
         parser.add_argument('-b', '--bundles', nargs='+', help='List of bundles to deploy')
         parser.add_argument('-d', '--debug', action='store_true', help="Debug output")
         parser.add_argument('-v', '--verbose', action='store_true', help="Verbose output")
+        parser.add_argument('-V', '--version', action='store', help="Software Version String")
         self.args = parser.parse_args()
 
     @property
@@ -115,11 +116,16 @@ class RunMain(object):
         os_name = self.op.os.os_name
         os_major = self.op.os.os_major_release
         os_minor = self.op.os.os_minor_release
+        cbs_sw_version = options.version
+        sgw_sw_version = options.version
         logger.info(f"Running on {os_name} release {os_major}")
         extra_vars = {
+            'package_root': self.parent,
             'os_name': os_name,
             'os_major': os_major,
             'os_minor': os_minor,
+            'cbs_sw_version': cbs_sw_version,
+            'sgw_sw_version': sgw_sw_version,
             'time_svc_enabled': self.is_time_synced(),
             'firewalld_enabled': self.is_firewalld_enabled()
         }

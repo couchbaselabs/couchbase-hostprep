@@ -21,6 +21,7 @@ install_ansible() {
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
     ansible-galaxy collection install community.general
+    ansible-galaxy collection install ansible.posix
     ;;
   ubuntu|debian)
     export DEBIAN_FRONTEND=noninteractive
@@ -28,16 +29,19 @@ install_ansible() {
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
     ansible-galaxy collection install community.general
+    ansible-galaxy collection install ansible.posix
     ;;
   opensuse-leap|sles)
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
     ansible-galaxy collection install community.general
+    ansible-galaxy collection install ansible.posix
     ;;
   arch)
     python3 -m pip install ansible
     python3 -m pip install ansible_runner
     ansible-galaxy collection install community.general
+    ansible-galaxy collection install ansible.posix
     ;;
   *)
     err_exit "Unknown Linux distribution $ID"

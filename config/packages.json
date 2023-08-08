@@ -93,6 +93,74 @@
         "run": "disable_firewall_dep.yaml",
         "post": null
       }
+    },
+    "THP": {
+      "centos|rhel|amzn|rocky|ol|fedora": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_thp_rhel.yaml",
+        "post": null
+      },
+      "ubuntu|debian": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_thp_deb.yaml",
+        "post": null
+      },
+      "opensuse-leap|sles": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_thp_sles.yaml",
+        "post": null
+      },
+      "arch": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_thp_rhel.yaml",
+        "post": null
+      }
+    },
+    "Swappiness": {
+      "centos|rhel|amzn|rocky|ol|fedora": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "configure_swappiness.yaml",
+        "post": null
+      },
+      "ubuntu|debian": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "configure_swappiness.yaml",
+        "post": null
+      },
+      "opensuse-leap|sles": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "configure_swappiness.yaml",
+        "post": null
+      },
+      "arch": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "configure_swappiness.yaml",
+        "post": null
+      }
     }
   }
 }
