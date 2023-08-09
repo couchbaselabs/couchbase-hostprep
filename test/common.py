@@ -44,7 +44,7 @@ def container_mkdir(container_id: Container, directory: str):
     assert exit_code == 0
 
 
-def start_container(image: str) -> Container:
+def start_container(image: str, platform: str = "linux/amd64") -> Container:
     client = docker.from_env()
 
     print(f"Starting {image} container")
@@ -54,6 +54,7 @@ def start_container(image: str) -> Container:
                                              tty=True,
                                              detach=True,
                                              privileged=True,
+                                             platform=platform,
                                              name="pytest",
                                              command=["/usr/sbin/init"]
                                              )

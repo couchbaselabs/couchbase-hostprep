@@ -6,3 +6,5 @@ pytest-mock>=3.6.1
 docker>=5.0.3
 ansible>=6.7.0
 ansible-runner>=2.3.3
+requests>=2.31.0
+urllib3>=2.0.0
