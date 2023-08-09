@@ -19,6 +19,7 @@ class Bundle:
     pre: Optional[str] = attr.ib(default=None)
     run: Optional[str] = attr.ib(default=None)
     post: Optional[str] = attr.ib(default=None)
+    extra_vars: Optional[List[str]] = attr.ib(default=[])
 
     @property
     def get_values(self):
@@ -36,6 +37,7 @@ class Bundle:
             json_data.get("pre"),
             json_data.get("run"),
             json_data.get("post"),
+            json_data.get("extra_vars", []),
         )
 
 

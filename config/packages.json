@@ -161,6 +161,32 @@
         "run": "configure_swappiness.yaml",
         "post": null
       }
+    },
+    "CBS": {
+      "centos|rhel|amzn|rocky|ol|fedora": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "install_cbs_yum.yaml",
+        "post": null
+      },
+      "ubuntu|debian": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "install_cbs_apt.yaml",
+        "post": null
+      },
+      "opensuse-leap|sles": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "install_cbs_sles.yaml",
+        "post": null
+      }
     }
   }
 }

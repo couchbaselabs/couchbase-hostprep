@@ -1,27 +1,12 @@
+---
 - hosts: localhost
   gather_facts: no
   name: Install Couchbase Server
   tasks:
     - name: Install Couchbase Server
       ansible.builtin.yum:
-        name: "https://packages.couchbase.com/releases/{{ cbs_sw_version }}/couchbase-server-enterprise-{{ cbs_sw_version }}-amzn2.x86_64.rpm"
+        name: "{{ cbs_download_url }}"
         state: present
-      when: os_name == "amzn" and os_major == "2"
-    - name: Install Couchbase Server
-      ansible.builtin.yum:
-        name: "https://packages.couchbase.com/releases/{{ cbs_sw_version }}/couchbase-server-enterprise-{{ cbs_sw_version }}-oel8.x86_64.rpm"
-        state: present
-      when: os_name == "ol" and os_major == "8"
-    - name: Install Couchbase Server
-      ansible.builtin.yum:
-        name: "https://packages.couchbase.com/releases/{{ cbs_sw_version }}/couchbase-server-enterprise-{{ cbs_sw_version }}-oel8.x86_64.rpm"
-        state: present
-      when: os_name == "rhel" and os_major == "8"
-    - name: Install Couchbase Server
-      ansible.builtin.yum:
-        name: "https://packages.couchbase.com/releases/{{ cbs_sw_version }}/couchbase-server-enterprise-{{ cbs_sw_version }}-linux.x86_64.rpm"
-        state: present
-      when: os_major != "2" and os_major != "8"
     - name: Set Process Limits
       ansible.builtin.copy:
         src: "{{ package_root }}/config/91-couchbase.conf"

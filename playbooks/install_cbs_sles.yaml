@@ -1,8 +1,9 @@
+---
 - hosts: localhost
   gather_facts: no
   name: Install Couchbase Server
   tasks:
     - name: Install Couchbase Server
       community.general.zypper:
-        name: "https://packages.couchbase.com/releases/{{ cbs_sw_version }}/couchbase-server-enterprise-{{ cbs_sw_version }}-suse{{ os_major }}.x86_64.rpm"
+        name: "{{ cbs_download_url }}"
         state: present

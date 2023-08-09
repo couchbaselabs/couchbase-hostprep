@@ -40,6 +40,11 @@ class SoftwareManager(object):
     def __init__(self):
         warnings.filterwarnings("ignore")
 
+    @property
+    def cbs_latest(self):
+        releases = self.get_cbs_tags()
+        return releases[0]
+
     @staticmethod
     def get_cbs_tags(name: str = "couchbase"):
         items = []

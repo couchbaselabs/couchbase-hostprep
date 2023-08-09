@@ -13,6 +13,7 @@ import ansible_runner
 from datetime import datetime
 from hostpreplib.bundles import SoftwareBundle
 from hostpreplib.hostinfo import HostInfo
+from hostpreplib.software import SoftwareManager
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
@@ -36,7 +37,7 @@ class Parameters(object):
         parser.add_argument('-b', '--bundles', nargs='+', help='List of bundles to deploy')
         parser.add_argument('-d', '--debug', action='store_true', help="Debug output")
         parser.add_argument('-v', '--verbose', action='store_true', help="Verbose output")
-        parser.add_argument('-V', '--version', action='store', help="Software Version String")
+        parser.add_argument('-c', '--cbs', action='store', help="Couchbase Server Version String")
         self.args = parser.parse_args()
 
     @property
@@ -116,16 +117,14 @@ class RunMain(object):
         os_name = self.op.os.os_name
         os_major = self.op.os.os_major_release
         os_minor = self.op.os.os_minor_release
-        cbs_sw_version = options.version
-        sgw_sw_version = options.version
-        logger.info(f"Running on {os_name} release {os_major}")
+        os_arch = self.op.os.architecture
+        logger.info(f"Running on {os_name} version {os_major} {os_arch}")
         extra_vars = {
             'package_root': self.parent,
             'os_name': os_name,
             'os_major': os_major,
             'os_minor': os_minor,
-            'cbs_sw_version': cbs_sw_version,
-            'sgw_sw_version': sgw_sw_version,
+            'os_arch': os_arch,
             'time_svc_enabled': self.is_time_synced(),
             'firewalld_enabled': self.is_firewalld_enabled()
         }
@@ -140,6 +139,13 @@ class RunMain(object):
             for playbook in [bundle.pre, bundle.run, bundle.post]:
                 if not playbook:
                     continue
+                for extra_var in bundle.extra_vars:
+                    logger.info(f"Getting value for variable {extra_var}")
+                    if extra_var == "cbs_download_url":
+                        sw = SoftwareManager()
+                        version = options.cbs if options.cbs else sw.cbs_latest
+                        url = sw.get_cbs_download(version, self.op)
+                        extra_vars.update({'cbs_download_url': url})
                 logger.info(f"Running playbook {playbook}")
                 stdout_save = sys.stdout
                 sys.stdout = StreamToLogger(logger, logging.INFO)
