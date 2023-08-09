@@ -97,3 +97,4 @@ class SoftwareManager(object):
                 continue
             else:
                 return platform_link
+        return None
