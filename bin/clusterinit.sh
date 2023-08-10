@@ -13,10 +13,17 @@ NODE_NUMBER=1
 USERNAME="Administrator"
 PASSWORD="password"
 CLUSTER_NAME="cbdb"
-DATAPATH=/opt/couchbase/var/lib/couchbase/data
-INDEXPATH=/opt/couchbase/var/lib/couchbase/data
-ANALYTICSPATH=/opt/couchbase/var/lib/couchbase/data
-EVENTINGPATH=/opt/couchbase/var/lib/couchbase/data
+if [ -d /cbdata ]; then
+  DATAPATH=/cbdata
+  INDEXPATH=/cbdata
+  ANALYTICSPATH=/cbdata
+  EVENTINGPATH=/cbdata
+else
+  DATAPATH=/opt/couchbase/var/lib/couchbase/data
+  INDEXPATH=/opt/couchbase/var/lib/couchbase/data
+  ANALYTICSPATH=/opt/couchbase/var/lib/couchbase/data
+  EVENTINGPATH=/opt/couchbase/var/lib/couchbase/data
+fi
 PRINT_USAGE="Usage: $0 -m | -i | -e | -s | -o | -r | -g | -u | -p | -n
              -m Mode
              -i Internal node IP

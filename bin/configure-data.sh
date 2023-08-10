@@ -41,11 +41,15 @@ fi
 
 echo "Mounting $MOUNT_POINT on $DATA_DEVICE"
 
-echo 'type=83' | sfdisk -f "$DATA_DEVICE"
+parted "$DATA_DEVICE" --script -- mkpart primary 0% 100%
+
+partprobe "$DATA_DEVICE"
 
 DISK_PARTITION=$(lsblk -nPf "$DATA_DEVICE" | tail -1 | cut -d\" -f2)
 
 mkfs -t ext4 "/dev/${DISK_PARTITION}"
+
+sync
 
 DISK_UUID=$(lsblk -nPf "/dev/$DISK_PARTITION" | cut -d\" -f8)
 
