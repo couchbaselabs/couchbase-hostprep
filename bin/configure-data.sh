@@ -41,7 +41,7 @@ fi
 
 echo "Mounting $MOUNT_POINT on $DATA_DEVICE"
 
-parted "$DATA_DEVICE" --script -- mkpart primary 0% 100%
+parted "$DATA_DEVICE" --script -a optimal -- mkpart primary 0% 100%
 
 partprobe "$DATA_DEVICE"
 
