@@ -64,8 +64,9 @@ mkfs -t ext4 "/dev/${DISK_PARTITION}" >> "$LOGFILE" 2>&1
 [ $? -ne 0 ] && err_exit "Can not create filesystem on $DISK_PARTITION"
 
 sync
+file -s "/dev/$DISK_PARTITION" | tee -a "$LOGFILE"
 
-DISK_UUID=$(lsblk -nPf "/dev/$DISK_PARTITION" | cut -d\" -f8)
+DISK_UUID=$(blkid -o value -s UUID "/dev/$DISK_PARTITION")
 
 [ -z "$DISK_UUID" ] && err_exit "Can not get UUID for device $DISK_PARTITION"
 
