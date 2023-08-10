@@ -41,13 +41,13 @@ fi
 
 echo "Mounting $MOUNT_POINT on $DATA_DEVICE"
 
-echo 'type=83' | sfdisk "$DATA_DEVICE"
+echo 'type=83' | sfdisk -f "$DATA_DEVICE"
 
 DISK_PARTITION=$(lsblk -nPf "$DATA_DEVICE" | tail -1 | cut -d\" -f2)
 
 mkfs -t ext4 "/dev/${DISK_PARTITION}"
 
-DISK_UUID=$(lsblk -nPf "$DISK_PARTITION" | cut -d\" -f8)
+DISK_UUID=$(lsblk -nPf "/dev/$DISK_PARTITION" | cut -d\" -f8)
 
 [ -z "$DISK_UUID" ] && err_exit "Can not get UUID for device $DISK_PARTITION"
 
