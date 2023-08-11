@@ -1,9 +1,11 @@
 ---
 - hosts: localhost
+  gather_facts: no
   name: Check if ufw is installed
-  shell: which ufw
-  register: utility_found
-  ignore_errors: true
+  tasks:
+    - shell: which ufw
+      register: utility_found
+      ignore_errors: true
 - hosts: localhost
   gather_facts: no
   name: Disable Service

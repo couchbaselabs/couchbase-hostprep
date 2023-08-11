@@ -55,7 +55,9 @@ def manual_2(args: argparse.Namespace):
     playbook_dir = f"{parent}/playbooks"
     hostprep_dir = f"{parent}/py_host_prep"
     requirements = f"{parent}/requirements.txt"
+    chrony_defaults = f"{parent}/test/chrony"
     destination = "/usr/local/hostprep"
+    sys_defaults = "/etc/default"
 
     container_id = start_container(args.container)
     try:
@@ -66,7 +68,9 @@ def manual_2(args: argparse.Namespace):
         copy_dir_to_container(container_id, playbook_dir, destination)
         copy_dir_to_container(container_id, hostprep_dir, destination)
         copy_to_container(container_id, requirements, destination)
+        copy_to_container(container_id, chrony_defaults, sys_defaults)
         run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
+        run_in_container(container_id, destination, ["bin/install.py", "-b", "CBS"])
     except Exception:
         raise
 

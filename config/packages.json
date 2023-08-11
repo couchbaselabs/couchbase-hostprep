@@ -165,7 +165,14 @@
     "CBS": {
       "centos|rhel|amzn|rocky|ol|fedora": {
         "requires": [
-          "Base"
+          "Base",
+          "Chrony",
+          "Firewall",
+          "THP",
+          "Swappiness"
+        ],
+        "extra_vars": [
+          "cbs_download_url"
         ],
         "pre": null,
         "run": "install_cbs_yum.yaml",
@@ -173,7 +180,14 @@
       },
       "ubuntu|debian": {
         "requires": [
-          "Base"
+          "Base",
+          "Chrony",
+          "Firewall",
+          "THP",
+          "Swappiness"
+        ],
+        "extra_vars": [
+          "cbs_download_url"
         ],
         "pre": null,
         "run": "install_cbs_apt.yaml",
@@ -181,7 +195,14 @@
       },
       "opensuse-leap|sles": {
         "requires": [
-          "Base"
+          "Base",
+          "Chrony",
+          "Firewall",
+          "THP",
+          "Swappiness"
+        ],
+        "extra_vars": [
+          "cbs_download_url"
         ],
         "pre": null,
         "run": "install_cbs_sles.yaml",
