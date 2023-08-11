@@ -14,7 +14,8 @@ USERNAME="Administrator"
 PASSWORD="password"
 CLUSTER_NAME="cbdb"
 if [ -d /cbdata ]; then
-  chown couchbase:couchbase /cbdata
+  chown -R couchbase:couchbase /cbdata
+  chmod 775 /cbdata
   DATAPATH=/cbdata
   INDEXPATH=/cbdata
   ANALYTICSPATH=/cbdata

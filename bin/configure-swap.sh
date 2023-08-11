@@ -1,41 +1,24 @@
 #!/bin/bash
+# shellcheck disable=SC2181
+# shellcheck disable=SC2034
 #
-SCRIPTDIR=$(cd $(dirname $0) && pwd)
-PKGDIR=$(dirname $SCRIPTDIR)
-source $PKGDIR/lib/libcommon.sh
-CONFIGURE=0
-FILE_SIZE=0
+DIR_NAME=$(dirname "$0")
+SCRIPTDIR=$(cd "$DIR_NAME" && pwd)
+PKGDIR=$(dirname "$SCRIPTDIR")
+source "$PKGDIR/lib/libcommon.sh"
 SWAP_DEVICE=""
-SWAP_ON=""
-WRITE_MODE=0
-READ_MODE=0
+SCRIPT_NAME=$(basename "$0")
+LOGFILE=/var/log/${SCRIPT_NAME%.*}.log
 
 PRINT_USAGE="Usage: $0 [ options ]
-             -o Configure swap true/false
-             -w Write config file
-             -r Read config file
-             -f Swap file size
-             -d Swap device"
+             -d Data device
+             -m Mount point"
 
-while getopts "o:f:d:wr" opt
+while getopts "d:" opt
 do
   case $opt in
-    o)
-      if [ "$OPTARG" = "true" ]; then
-        CONFIGURE=1
-      fi
-      ;;
-    f)
-      FILE_SIZE=$OPTARG
-      ;;
     d)
       SWAP_DEVICE=$OPTARG
-      ;;
-    w)
-      WRITE_MODE=1
-      ;;
-    r)
-      READ_MODE=1
       ;;
     \?)
       print_usage
@@ -45,46 +28,27 @@ do
 done
 shift $((OPTIND -1))
 
-if [ "$WRITE_MODE" -eq 1 ]; then
-  echo "${CONFIGURE}:${SWAP_DEVICE}" > /etc/swap-dev.conf
+if [ -z "$SWAP_DEVICE" ]; then
+  for DISK in $(lsscsi | grep -v sr0 | awk '{print $NF}')
+  do
+    mount | awk '{print $1}' | grep ^"${DISK}" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      SWAP_DEVICE=$DISK
+      break
+    fi
+  done
+fi
+
+if [ -z "$SWAP_DEVICE" ]; then
+  echo "No swap device available. Exiting."
   exit
 fi
 
-if [ "$READ_MODE" -eq 1 ]; then
-  if [ ! -f /etc/swap-dev.conf ]; then
-    echo "Config file /etc/swap-dev.conf not found"
-    exit
-  fi
-  CONFIGURE=$(cat /etc/swap-dev.conf | cut -f1 -d:)
-  SWAP_DEVICE=$(cat /etc/swap-dev.conf | cut -f2 -d:)
-fi
+echo "Configuring swap on $SWAP_DEVICE"
 
-if [ $CONFIGURE -eq 1 ]; then
-  if [ -n "$SWAP_DEVICE" ]; then
-    check_device $SWAP_DEVICE
-    if [ $? -ne 0 ]; then
-      echo "Device $SWAP_DEVICE ineligible, attempting to locate alternative"
-      SWAP_DEVICE=$(find_swap_device)
-    fi
-    SWAP_ON=$SWAP_DEVICE
-  else
-    if [ -n "$FILE_SIZE" ]; then
-      SWAP_SIZE=$FILE_SIZE
-    else
-      SWAP_SIZE=$(free -b | awk '{print $2}' | head -2 | tail -1)
-    fi
-    SWAP_ON="/swapfile"
-    fallocate -l ${SWAP_SIZE} ${SWAP_ON}
-    chmod 600 ${SWAP_ON}
-  fi
+mkswap "$SWAP_DEVICE"
+swapon "$SWAP_DEVICE"
+echo "$SWAP_DEVICE none swap sw 0 0" >> /etc/fstab
+config_swappiness 1
 
-  if [ -z "$SWAP_ON" ]; then
-    echo "No swap device available. Exiting."
-    exit
-  fi
-
-  mkswap $SWAP_ON
-  swapon $SWAP_ON
-  echo "$SWAP_ON none swap sw 0 0" >> /etc/fstab
-  config_swappiness 1
-fi
+##
