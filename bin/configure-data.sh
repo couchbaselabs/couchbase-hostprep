@@ -45,7 +45,7 @@ fi
 
 if [ -z "$DATA_DEVICE" ]; then
   echo "No data device available. Exiting."
-  exit
+  exit 1
 fi
 
 echo "Mounting $MOUNT_POINT on $DATA_DEVICE"

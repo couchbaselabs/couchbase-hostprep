@@ -7,6 +7,7 @@ SCRIPTDIR=$(cd "$DIR_NAME" && pwd)
 PKGDIR=$(dirname "$SCRIPTDIR")
 source "$PKGDIR/lib/libcommon.sh"
 SWAP_DEVICE=""
+CONFIGURE=0
 SCRIPT_NAME=$(basename "$0")
 LOGFILE=/var/log/${SCRIPT_NAME%.*}.log
 
@@ -14,11 +15,16 @@ PRINT_USAGE="Usage: $0 [ options ]
              -d Data device
              -m Mount point"
 
-while getopts "d:" opt
+while getopts "d:o:" opt
 do
   case $opt in
     d)
       SWAP_DEVICE=$OPTARG
+      ;;
+    o)
+      if [ "$OPTARG" = "true" ]; then
+        CONFIGURE=1
+      fi
       ;;
     \?)
       print_usage
@@ -27,6 +33,10 @@ do
   esac
 done
 shift $((OPTIND -1))
+
+if [ $CONFIGURE -eq 0 ]; then
+  exit 0
+fi
 
 if [ -z "$SWAP_DEVICE" ]; then
   for DISK in $(lsscsi | grep -v sr0 | awk '{print $NF}')
@@ -41,7 +51,7 @@ fi
 
 if [ -z "$SWAP_DEVICE" ]; then
   echo "No swap device available. Exiting."
-  exit
+  exit 1
 fi
 
 echo "Configuring swap on $SWAP_DEVICE"
