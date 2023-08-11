@@ -6,7 +6,7 @@ DIR_NAME=$(dirname "$0")
 SCRIPTDIR=$(cd "$DIR_NAME" && pwd)
 PKGDIR=$(dirname "$SCRIPTDIR")
 source "$PKGDIR/lib/libcommon.sh"
-DATA_DEVICE="/dev/sdb"
+DATA_DEVICE=""
 MOUNT_POINT="/cbdata"
 SCRIPT_NAME=$(basename "$0")
 LOGFILE=/var/log/${SCRIPT_NAME%.*}.log
@@ -32,10 +32,15 @@ do
 done
 shift $((OPTIND -1))
 
-check_device "$DATA_DEVICE"
-if [ $? -ne 0 ]; then
-  echo "Device $DATA_DEVICE ineligible, attempting to locate alternative"
-  DATA_DEVICE=$(find_swap_device)
+if [ -z "$DATA_DEVICE" ]; then
+  for DISK in $(lsscsi | grep -v sr0 | awk '{print $NF}')
+  do
+    mount | awk '{print $1}' | grep ^"${DISK}" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      DATA_DEVICE=$DISK
+      break
+    fi
+  done
 fi
 
 if [ -z "$DATA_DEVICE" ]; then
