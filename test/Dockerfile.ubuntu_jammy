@@ -1,5 +1,5 @@
 # Dockerfile
 
-FROM ubuntu:focal
+FROM ubuntu:jammy
 RUN apt-get update
 RUN apt-get install -y systemd systemd-sysv dbus dbus-user-session

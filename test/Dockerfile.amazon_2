@@ -1,0 +1,4 @@
+# Dockerfile
+
+FROM amazonlinux:2
+RUN yum install -q -y systemd

@@ -19,14 +19,14 @@ parent = os.path.dirname(current)
                                        "oraclelinux:8",
                                        "oraclelinux:9",
                                        "fedora:latest",
-                                       "ubuntu:focal",
-                                       "ubuntu:jammy",
-                                       "debian:bullseye",
-                                       "opensuse/leap:latest",
-                                       "registry.suse.com/suse/sle15:latest",
-                                       "registry.suse.com/suse/sle15:15.3",
-                                       "amazonlinux:2",
-                                       "amazonlinux:2023"])
+                                       "ubuntu-focal-init",
+                                       "ubuntu-jammy-init",
+                                       "debian-bullseye-init",
+                                       "opensuse-init",
+                                       "sles-155-init",
+                                       "sles-153-init",
+                                       "amazon-2-init",
+                                       "amazon-2023-init"])
 def test_1(container):
     global parent
     bin_dir = f"{parent}/bin"
@@ -50,7 +50,7 @@ def test_1(container):
         copy_to_container(container_id, requirements, destination)
         copy_to_container(container_id, chrony_defaults, sys_defaults)
         run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
-        run_in_container(container_id, destination, ["bin/install.py", "-b", "Base"])
+        run_in_container(container_id, destination, ["bin/install.py", "-b", "CBS"])
         stop_container(container_id)
     except Exception:
         stop_container(container_id)
