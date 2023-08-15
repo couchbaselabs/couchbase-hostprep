@@ -23,11 +23,16 @@ class Params(object):
         parser.add_argument("--start", action="store_true")
         parser.add_argument("--stop", action="store_true")
         parser.add_argument("--refresh", action="store_true")
+        parser.add_argument("--minimal", action="store_true")
         self.args = parser.parse_args()
 
     @property
     def parameters(self):
         return self.args
+
+
+def minimal_1(args: argparse.Namespace):
+    start_container(args.container)
 
 
 def manual_1(args: argparse.Namespace):
@@ -49,6 +54,8 @@ def manual_1(args: argparse.Namespace):
 
 def manual_2(args: argparse.Namespace):
     global parent
+    platform = "linux/amd64"
+    volume = "/opt/couchbase"
     bin_dir = f"{parent}/bin"
     cfg_dir = f"{parent}/config"
     lib_dir = f"{parent}/lib"
@@ -59,7 +66,7 @@ def manual_2(args: argparse.Namespace):
     destination = "/usr/local/hostprep"
     sys_defaults = "/etc/default"
 
-    container_id = start_container(args.container)
+    container_id = start_container(args.container, platform, volume)
     try:
         container_mkdir(container_id, destination)
         copy_dir_to_container(container_id, bin_dir, destination)
@@ -118,7 +125,8 @@ logging.basicConfig()
 
 if options.stop:
     container = get_container_id()
-    stop_container(container)
+    if container:
+        stop_container(container)
 
 if options.run:
     manual_1(options)
@@ -128,3 +136,6 @@ if options.start:
 
 if options.refresh:
     refresh()
+
+if options.minimal:
+    minimal_1(options)
