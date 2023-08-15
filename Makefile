@@ -1,6 +1,10 @@
-.PHONY: all clean ubuntu debian sles amazon
+.PHONY: all clean ubuntu debian sles amazon redhat test
+export PYTHONPATH := $(shell pwd)/test:$(shell pwd):$(PYTHONPATH)
 
-all: clean ubuntu debian sles amazon
+all: clean ubuntu debian sles amazon redhat
+redhat:
+		docker buildx build --load --platform linux/amd64 -t rhel-8-init -f test/Dockerfile.redhat_8 .
+		docker buildx build --load --platform linux/amd64 -t rhel-9-init -f test/Dockerfile.redhat_9 .
 ubuntu:
 		docker buildx build --load --platform linux/amd64 -t ubuntu-focal-init -f test/Dockerfile.ubuntu_focal .
 		docker buildx build --load --platform linux/amd64 -t ubuntu-jammy-init -f test/Dockerfile.ubuntu_jammy .
@@ -23,3 +27,5 @@ clean:
 		docker image prune -f
 		docker volume prune -f
 		docker buildx prune -f
+test:
+		python -m pytest test/test_1.py

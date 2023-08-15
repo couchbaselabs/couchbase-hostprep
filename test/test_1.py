@@ -4,7 +4,7 @@ import os
 import logging
 import warnings
 import pytest
-from common import start_container, stop_container, copy_to_container, run_in_container, container_mkdir, copy_dir_to_container
+from test.common import start_container, stop_container, copy_to_container, run_in_container, container_mkdir, copy_dir_to_container
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
