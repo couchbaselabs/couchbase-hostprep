@@ -64,6 +64,7 @@ def start_container(image: str, platform: str = "linux/amd64", volume_mount: str
                                              privileged=True,
                                              platform=platform,
                                              name="pytest",
+                                             security_opt=["seccomp=unconfined"],
                                              volumes=[f"{volume.name}:{volume_mount}"],
                                              command=["/usr/sbin/init"]
                                              )
@@ -100,6 +101,9 @@ def stop_container(container_id: Container):
     container_id.stop()
     print("Removing test container")
     container_id.remove()
-    volume = client.volumes.get("pytest-volume")
-    volume.remove()
+    try:
+        volume = client.volumes.get("pytest-volume")
+        volume.remove()
+    except docker.errors.NotFound:
+        pass
     print("Done.")

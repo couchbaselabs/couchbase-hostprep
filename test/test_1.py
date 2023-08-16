@@ -37,8 +37,10 @@ def test_1(container, platform):
     hostprep_dir = f"{parent}/py_host_prep"
     requirements = f"{parent}/requirements.txt"
     chrony_defaults = f"{parent}/test/chrony"
+    chrony_sysconfig = f"{parent}/test/chronyd"
     destination = "/usr/local/hostprep"
     sys_defaults = "/etc/default"
+    sys_config = "/etc/sysconfig"
 
     container_id = start_container(container, platform, volume)
     try:
@@ -50,6 +52,7 @@ def test_1(container, platform):
         copy_dir_to_container(container_id, hostprep_dir, destination)
         copy_to_container(container_id, requirements, destination)
         copy_to_container(container_id, chrony_defaults, sys_defaults)
+        copy_to_container(container_id, chrony_sysconfig, sys_config)
         run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
         run_in_container(container_id, destination, ["bin/install.py", "-b", "CBS"])
         stop_container(container_id)
