@@ -4,12 +4,14 @@ import docker
 from docker.errors import APIError
 from docker.models.containers import Container
 from docker import APIClient
-from typing import Union
+from typing import Union, List
+from io import BytesIO
 import io
 import os
 import tarfile
 import warnings
 import logging
+import subprocess
 
 warnings.filterwarnings("ignore")
 current = os.path.dirname(os.path.realpath(__file__))
@@ -27,6 +29,26 @@ def make_local_dir(name: str):
             os.mkdir(name)
         except OSError:
             raise
+
+
+def cmd_exec(command: Union[str, List[str]], directory: str):
+    buffer = io.BytesIO()
+
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=directory)
+
+    while True:
+        data = p.stdout.read()
+        if not data:
+            break
+        buffer.write(data)
+
+    p.communicate()
+
+    if p.returncode != 0:
+        raise ValueError("command exited with non-zero return code")
+
+    buffer.seek(0)
+    return buffer
 
 
 def copy_to_container(container_id: Container, src: str, dst: str):
@@ -62,6 +84,24 @@ def copy_dir_to_container(container_id: Container, src_dir: str, dst: str):
     with tarfile.open(fileobj=stream, mode='w|') as tar:
         name = os.path.basename(src_dir)
         tar.add(src_dir, arcname=name, recursive=True)
+
+    container_id.put_archive(dst, stream.getvalue())
+
+
+def copy_git_to_container(container_id: Container, src: str, dst: str):
+    file_list = []
+    print(f"Copying git HEAD to {dst}")
+    output: BytesIO = cmd_exec(["git", "ls-tree", "--full-tree", "--name-only", "-r", "HEAD"], src)
+    while True:
+        line = output.readline()
+        if not line:
+            break
+        line_string = line.decode("utf-8")
+        file_list.append(line_string.strip())
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode='w|') as tar:
+        for filename in file_list:
+            tar.add(filename, recursive=True)
 
     container_id.put_archive(dst, stream.getvalue())
 

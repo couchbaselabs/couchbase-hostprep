@@ -2,3 +2,5 @@
 
 FROM amazonlinux:2
 RUN yum install -q -y systemd
+COPY test/chrony /etc/default/chrony
+COPY test/chronyd /etc/sysconfig/chronyd
