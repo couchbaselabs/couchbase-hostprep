@@ -13,7 +13,8 @@ from hostpreplib.bundles import SoftwareBundle
 class SoftwareManager(object):
     os_aliases = {
         'sles': 'suse',
-        'ol': 'oel'
+        'ol': 'oel',
+        'opensuse-leap': 'suse'
     }
     os_release_aliases = {
         '20': '20.04'
@@ -25,6 +26,7 @@ class SoftwareManager(object):
         'ol': 'rpm',
         'rocky': 'rpm',
         'sles': 'rpm',
+        'opensuse-leap': 'rpm',
         'ubuntu': 'deb',
         'debian': 'deb',
     }
@@ -35,6 +37,7 @@ class SoftwareManager(object):
         'ol': ['8', '9'],
         'rocky': ['8', '9'],
         'sles': ['12', '15'],
+        'opensuse-leap': ['15'],
         'ubuntu': ['20.04', '22'],
         'debian': ['10', '11'],
     }
