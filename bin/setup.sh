@@ -78,7 +78,6 @@ install_prerequisites() {
   debian)
     ;;
   opensuse-leap)
-    zypper addrepo http://download.opensuse.org/tumbleweed/repo/oss/ repo-tumbleweed-oss
     zypper install -y which
     ;;
   sles)
@@ -127,7 +126,8 @@ install_python() {
     ;;
   opensuse-leap)
     PIP_VERSION="3"
-    zypper install -y $PYTHON39_ZYPPER
+    zypper install -y $PYTHON311_ZYPPER
+    set_python_version "3.11"
     ;;
   arch)
     pacman -S --noconfirm $PYTHON39_PACMAN

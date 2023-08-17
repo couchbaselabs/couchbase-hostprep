@@ -59,6 +59,11 @@ amazon:
 clean:
 		@if docker image inspect rhel-8-init > /dev/null 2>&1; then docker rmi rhel-8-init; fi
 		@if docker image inspect rhel-9-init > /dev/null 2>&1; then docker rmi rhel-9-init; fi
+		@if docker image inspect rocky-8-init > /dev/null 2>&1; then docker rmi rocky-8-init; fi
+		@if docker image inspect rocky-9-init > /dev/null 2>&1; then docker rmi rocky-9-init; fi
+		@if docker image inspect oel-8-init > /dev/null 2>&1; then docker rmi oel-8-init; fi
+		@if docker image inspect oel-9-init > /dev/null 2>&1; then docker rmi oel-9-init; fi
+		@if docker image inspect fedora-init > /dev/null 2>&1; then docker rmi fedora-init; fi
 		@if docker image inspect ubuntu-focal-init > /dev/null 2>&1; then docker rmi ubuntu-focal-init; fi
 		@if docker image inspect ubuntu-jammy-init > /dev/null 2>&1; then docker rmi ubuntu-jammy-init; fi
 		@if docker image inspect debian-bullseye-init > /dev/null 2>&1; then docker rmi debian-bullseye-init; fi

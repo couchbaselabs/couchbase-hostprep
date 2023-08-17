@@ -67,7 +67,11 @@ def copy_log_from_container(container_id: Container, src: str, directory: str):
     src_base = os.path.basename(src)
     dst = f"{directory}/{src_base}"
     print(f"Copying {src} to {dst}")
-    bits, stat = container_id.get_archive(src)
+    try:
+        bits, stat = container_id.get_archive(src)
+    except docker.errors.NotFound:
+        print(f"{src}: not found")
+        return
     stream = io.BytesIO()
     for chunk in bits:
         stream.write(chunk)
