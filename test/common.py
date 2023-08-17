@@ -18,6 +18,17 @@ logging.getLogger("docker").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
+def make_local_dir(name: str):
+    if not os.path.exists(name):
+        path_dir = os.path.dirname(name)
+        if not os.path.exists(path_dir):
+            make_local_dir(path_dir)
+        try:
+            os.mkdir(name)
+        except OSError:
+            raise
+
+
 def copy_to_container(container_id: Container, src: str, dst: str):
     print(f"Copying {src} to {dst}")
     stream = io.BytesIO()
@@ -27,6 +38,22 @@ def copy_to_container(container_id: Container, src: str, dst: str):
         tar.addfile(info, file)
 
     container_id.put_archive(dst, stream.getvalue())
+
+
+def copy_log_from_container(container_id: Container, src: str, directory: str):
+    make_local_dir(directory)
+    src_base = os.path.basename(src)
+    dst = f"{directory}/{src_base}"
+    print(f"Copying {src} to {dst}")
+    bits, stat = container_id.get_archive(src)
+    stream = io.BytesIO()
+    for chunk in bits:
+        stream.write(chunk)
+    stream.seek(0)
+    with tarfile.open(fileobj=stream, mode='r') as tar, open(dst, 'wb') as file:
+        f = tar.extractfile(src_base)
+        data = f.read()
+        file.write(data)
 
 
 def copy_dir_to_container(container_id: Container, src_dir: str, dst: str):
@@ -77,6 +104,21 @@ def start_container(image: str, platform: str = "linux/amd64", volume_mount: str
     print("Container started")
     print("Done.")
     return container_id
+
+
+def image_name(container_id: Container):
+    tags = container_id.image.tags
+    return tags[0].split(':')[0].replace('/', '-')
+
+
+def container_log(container_id: Container, directory: str):
+    make_local_dir(directory)
+    print(f"Copying {container_id.name} log to {directory}")
+    filename = f"{directory}/{container_id.name}.log"
+    output = container_id.attach(stdout=True, stderr=True, logs=True)
+    with open(filename, 'w') as out_file:
+        out_file.write(output.decode("utf-8"))
+        out_file.close()
 
 
 def run_in_container(container_id: Container, directory: str, command: Union[str, list[str]]):

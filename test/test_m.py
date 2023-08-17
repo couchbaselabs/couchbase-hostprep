@@ -4,7 +4,8 @@ import os
 import argparse
 import logging
 import warnings
-from common import start_container, stop_container, copy_to_container, run_in_container, get_container_id, container_mkdir, copy_dir_to_container
+from common import (start_container, stop_container, copy_to_container, run_in_container, get_container_id, container_mkdir, copy_dir_to_container, container_log,
+                    copy_log_from_container, image_name)
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger()
@@ -24,6 +25,7 @@ class Params(object):
         parser.add_argument("--stop", action="store_true")
         parser.add_argument("--refresh", action="store_true")
         parser.add_argument("--minimal", action="store_true")
+        parser.add_argument("--logs", action="store_true")
         self.args = parser.parse_args()
 
     @property
@@ -67,8 +69,12 @@ def manual_2(args: argparse.Namespace):
     destination = "/usr/local/hostprep"
     sys_defaults = "/etc/default"
     sys_config = "/etc/sysconfig"
+    container_image = args.container
+    hostprep_log_file = "/var/log/hostprep.log"
+    setup_log_file = "/usr/local/hostprep/setup.log"
 
-    container_id = start_container(args.container, platform, volume)
+    container_id = start_container(container_image, platform, volume)
+    log_dest = f"{parent}/test/output/{image_name(container_id)}"
     try:
         container_mkdir(container_id, destination)
         copy_dir_to_container(container_id, bin_dir, destination)
@@ -82,7 +88,21 @@ def manual_2(args: argparse.Namespace):
         run_in_container(container_id, destination, ["bin/setup.sh", "-s"])
         run_in_container(container_id, destination, ["bin/install.py", "-b", "CBS"])
     except Exception:
+        container_log(container_id, log_dest)
+        copy_log_from_container(container_id, hostprep_log_file, log_dest)
+        copy_log_from_container(container_id, setup_log_file, log_dest)
         raise
+
+
+def get_logs():
+    global parent
+    container_id = get_container_id()
+    hostprep_log_file = "/var/log/hostprep.log"
+    setup_log_file = "/usr/local/hostprep/setup.log"
+    log_dest = f"{parent}/test/output/{image_name(container_id)}"
+    container_log(container_id, log_dest)
+    copy_log_from_container(container_id, hostprep_log_file, log_dest)
+    copy_log_from_container(container_id, setup_log_file, log_dest)
 
 
 def refresh():
@@ -142,3 +162,6 @@ if options.refresh:
 
 if options.minimal:
     minimal_1(options)
+
+if options.logs:
+    get_logs()
