@@ -5,6 +5,7 @@ from socket import getaddrinfo, gethostname
 from requests import get
 import requests.exceptions
 import warnings
+import socket
 
 
 class NetworkInfo(object):
@@ -28,3 +29,14 @@ class NetworkInfo(object):
             return ip
         except requests.exceptions.Timeout:
             return None
+
+    @staticmethod
+    def check_port(address: str, port: int):
+        socket.setdefaulttimeout(4)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex((address, port))
+        sock.close()
+        if result == 0:
+            return True
+        else:
+            return False
