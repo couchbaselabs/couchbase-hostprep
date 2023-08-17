@@ -122,9 +122,11 @@ def container_log(container_id: Container, directory: str):
 
 
 def run_in_container(container_id: Container, directory: str, command: Union[str, list[str]]):
+    print(f"Running: {command if type(command) == str else ' '.join(command)}")
     exit_code, output = container_id.exec_run(command, workdir=directory)
     for line in output.split(b'\n'):
-        print(line.decode("utf-8"))
+        if len(line) > 0:
+            print(line.decode("utf-8"))
     assert exit_code == 0
     print("Done.")
 

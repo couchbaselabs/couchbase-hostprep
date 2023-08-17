@@ -16,6 +16,7 @@ read_os_info() {
 }
 
 install_ansible() {
+  python3 -m pip install --upgrade pip setuptools wheel
   case ${ID:-null} in
   centos|rhel|amzn|rocky|ol|fedora)
     python3 -m pip install ansible
