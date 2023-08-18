@@ -7,10 +7,21 @@
       ansible.builtin.rpm_key:
         state: present
         key: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ os_major }}"
+      when: os_name != "fedora" and os_name != "amzn"
     - name: Package
       ansible.builtin.yum:
         name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ os_major }}.noarch.rpm"
         state: latest
+      when: os_name != "fedora" and os_name != "amzn"
+    - name: Amazon Linux Package
+      ansible.builtin.yum:
+        name: amazon-linux-extras
+        state: latest
+      when: os_name == "amzn" and os_major == "2"
+    - name: Amazon Linux Install
+      ansible.builtin.shell:
+        cmd: amazon-linux-extras install epel -y
+      when: os_name == "amzn" and os_major == "2"
 - hosts: localhost
   gather_facts: no
   name: Install Main

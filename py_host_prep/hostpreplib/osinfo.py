@@ -22,7 +22,7 @@ class OSRelease(object):
 
         self.as_dict()
         self.os_name = self.os_info['ID']
-        self.os_like = self.os_info['ID_LIKE']
+        self.os_like = self.os_info.get('ID_LIKE', self.os_name)
         self.arch = os.uname().machine
         self.os_major_release = self.os_info['VERSION_ID'].split('.')[0]
         try:
