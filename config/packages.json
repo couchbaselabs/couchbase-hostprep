@@ -1,10 +1,16 @@
 {
   "bundles": {
     "Base": {
-      "centos|rhel|amzn|rocky|ol|fedora": {
+      "centos|rhel|rocky|ol|fedora": {
         "requires": [],
         "pre": null,
         "run": "base_sw_yum.yaml",
+        "post": null
+      },
+      "amzn": {
+        "requires": [],
+        "pre": null,
+        "run": "base_sw_amzn.yaml",
         "post": null
       },
       "ubuntu|debian": {
