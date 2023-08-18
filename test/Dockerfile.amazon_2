@@ -13,9 +13,7 @@ RUN yum -y install dbus systemd systemd-sysv git ; \
     rm -f /lib/systemd/system/anaconda.target.wants/*
 RUN amazon-linux-extras enable python3.8
 RUN yum install -q -y python3.8
-RUN mkdir /var/tmp/docker-systemctl-replacement
-RUN git clone https://github.com/gdraheim/docker-systemctl-replacement /var/tmp/docker-systemctl-replacement
-RUN cp /var/tmp/docker-systemctl-replacement/files/docker/systemctl3.py /usr/bin/systemctl
-RUN cp /var/tmp/docker-systemctl-replacement/files/docker/journalctl3.py /usr/bin/journalctl
+COPY test/systemctl3.py /usr/bin/systemctl
+COPY test/journalctl3.py /usr/bin/journalctl
 COPY test/chrony /etc/default/chrony
 COPY test/chronyd /etc/sysconfig/chronyd
