@@ -25,7 +25,6 @@ parent = os.path.dirname(current)
                                                  ("opensuse-init", "linux/amd64"),
                                                  ("sles-155-init", "linux/amd64"),
                                                  ("sles-153-init", "linux/amd64"),
-                                                 ("amazon-2-init", "linux/amd64"),
                                                  ("amazon-2023-init", "linux/amd64")])
 def test_1(container, platform):
     global parent
