@@ -1006,7 +1006,6 @@ class waitlock:
             logg.error("[%s] not able to get the lock to %s", os.getpid(), lockname)
         except Exception as e:
             logg.warning("[%s] oops %s, %s", os.getpid(), str(type(e)), e)
-        # TODO# raise Exception("no lock for %s", self.unit or "global")
         return False
     def __exit__(self, type, value, traceback):
         try:
@@ -2281,7 +2280,7 @@ class Systemctl:
             newcmd = self.expand_cmd(exe, env, conf)
         if mode.argv0:
             if len(newcmd) > 1:
-                del newcmd[1] # TODO: keep but allow execve calls to pick it up
+                del newcmd[1]
         return mode, newcmd
     def split_cmd(self, cmd):
         cmd2 = cmd.replace("\\\n", "")
@@ -3682,7 +3681,7 @@ class Systemctl:
                 if not forkpid:
                     self.execve_from(conf, newcmd, env) # pragma: no cover
                 run = subprocess_waitpid(forkpid)
-                run = must_have_failed(run, newcmd) # TODO: a workaround
+                run = must_have_failed(run, newcmd)
                 # self.write_status_from(conf, MainPID=run.pid) # no ExecStop
                 if run.returncode and exe.check:
                     returncode = run.returncode
@@ -4213,7 +4212,7 @@ class Systemctl:
         #   0 when "active"
         #   1 when unit is not found
         #   3 when any "inactive" or "unknown"
-        # However: # TODO! BUG in original systemctl!
+        # However:
         #   documentation says " exit code 0 if at least one is active"
         #   and "Unless --quiet is specified, print the unit state"
         # |
@@ -4277,7 +4276,7 @@ class Systemctl:
             return self.get_active_target_from(conf)
         else:
             logg.debug("is-active not implemented for unit type: %s", conf.name())
-            return "unknown" # TODO: "inactive" ?
+            return "unknown"
     def get_active_service_from(self, conf):
         """ returns 'active' 'inactive' 'failed' 'unknown' """
         # used in try-restart/other commands to check if needed.
@@ -4609,7 +4608,7 @@ class Systemctl:
             logg.warning("preset-all makes no sense in --user mode")
             return True
         found_all = True
-        units = self.match_units() # TODO: how to handle module arguments
+        units = self.match_units()
         return self.preset_units(units) and found_all
     def wanted_from(self, conf, default = None):
         if not conf: return default
@@ -5110,7 +5109,7 @@ class Systemctl:
                             ".requires", ".wants"]
         return self.get_dependencies_unit(unit, styles)
     def get_start_dependencies(self, unit, styles = None): # pragma: no cover
-        """ the list of services to be started as well / TODO: unused """
+        """ the list of services to be started as well """
         styles = styles or ["Requires", "Wants", "Requisite", "BindsTo", "PartOf", "ConsistsOf",
                             ".requires", ".wants"]
         deps = {}
@@ -5140,7 +5139,7 @@ class Systemctl:
         deps = {}
         for unit in units:
             unit_order.append(unit)
-            # unit_deps = self.get_start_dependencies(unit) # TODO
+            # unit_deps = self.get_start_dependencies(unit)
             unit_deps = self.get_dependencies_unit(unit)
             for dep_unit, styles in unit_deps.items():
                 dep_styles = to_list(styles)
