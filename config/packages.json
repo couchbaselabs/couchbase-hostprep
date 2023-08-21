@@ -101,12 +101,20 @@
       }
     },
     "THP": {
-      "centos|rhel|amzn|rocky|ol|fedora": {
+      "centos|rhel|rocky|ol|fedora": {
         "requires": [
           "Base"
         ],
         "pre": null,
         "run": "disable_thp_rhel.yaml",
+        "post": null
+      },
+      "amzn": {
+        "requires": [
+          "Base"
+        ],
+        "pre": null,
+        "run": "disable_thp_amzn.yaml",
         "post": null
       },
       "ubuntu|debian": {

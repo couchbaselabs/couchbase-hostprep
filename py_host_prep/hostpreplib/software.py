@@ -8,6 +8,7 @@ import re
 import json
 import warnings
 from hostpreplib.bundles import SoftwareBundle
+from hostpreplib.retry import retry
 
 
 class SoftwareManager(object):
@@ -52,8 +53,8 @@ class SoftwareManager(object):
         releases = self.get_cbs_tags()
         return releases[0]
 
-    @staticmethod
-    def get_cbs_tags(name: str = "couchbase"):
+    @retry()
+    def get_cbs_tags(self, name: str = "couchbase"):
         items = []
         session = requests.Session()
         retries = Retry(total=60,
@@ -83,8 +84,8 @@ class SoftwareManager(object):
 
         return current_releases
 
-    @staticmethod
-    def get_cbs_download(release: str, op: SoftwareBundle):
+    @retry()
+    def get_cbs_download(self, release: str, op: SoftwareBundle):
         session = requests.Session()
         retries = Retry(total=60,
                         backoff_factor=0.1,
